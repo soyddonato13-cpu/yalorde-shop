@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yalorde | Acceso Seguro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: #f4f6f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            transition: background 0.3s;
+            overflow: hidden;
+        }
+
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+        }
+
+        .login-btn {
+            background: #000;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* WARNING MESSAGES */
+        .alert-msg {
+            display: none;
+            text-align: left;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            display: none;
+            /* Attempt 1 */
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        /* FAKE VERIFICATION STYLES */
+        .verification-screen {
+            display: none;
+            text-align: left;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .warning-title {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .code-input-fake {
+            margin-top: 20px;
+        }
+
+        .code-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-cancel {
+            background: #eee;
+            color: #333;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .btn-send {
+            background: #0d6efd;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .msg-fake {
+            margin-top: 15px;
+            font-size: 0.8rem;
+            color: green;
+            display: none;
+        }
+
+        /* TERROR SEQUENCE STYLES */
+        .terror-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 1000;
+            color: #0f0;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 40px;
+            box-sizing: border-box;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .terror-title {
+            color: red;
+            font-size: 2rem;
+            font-weight: bold;
+            border: 2px solid red;
+            padding: 20px;
+            margin-bottom: 30px;
+            animation: blink 0.5s infinite;
+        }
+
+        .terror-text {
+            font-size: 1.2rem;
+            max-width: 800px;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        .loading-bar-container {
+            width: 100%;
+            max-width: 600px;
+            height: 20px;
+            border: 1px solid #333;
+            margin: 20px auto;
+        }
+
+        .loading-bar {
+            height: 100%;
+            width: 0%;
+            background: red;
+            transition: width 5s linear;
+        }
+
+        @keyframes blink {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes bg-flash {
+            0% {
+                background: #f4f6f8;
+            }
+
+            50% {
+                background: #ffcccc;
+            }
+
+            100% {
+                background: #f4f6f8;
+            }
+        }
+
+        .flash-red {
+            animation: bg-flash 1s infinite;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-card" id="main-card">
+        <div class="logo">YALORDE</div>
+
+        <!-- STEP 1: INITIAL LOGIN -->
+        <div id="step-1">
+            <div id="attempt-1-msg" class="alert-msg alert-warning">
+                <strong><i class="fa-solid fa-triangle-exclamation"></i> Error: Credenciales no válidas.</strong>
+                <br>
+                Le queda 1 intento antes de que el sistema active el <strong>Protocolo de Protección de Activos
+                    Críticos</strong> según la Directiva Presidencial 21. Por favor, verifique su llave física o token
+                de acceso.
+            </div>
+
+            <div class="input-group">
+                <label>Contraseña de Acceso</label>
+                <input type="password" id="init-password" placeholder="Ingrese clave maestra">
+            </div>
+            <button class="login-btn" onclick="checkStep1()">Ingresar</button>
+        </div>
+
+        <!-- STEP 2: FAKE VERIFICATION -->
+        <div id="step-2" class="verification-screen">
+            <div class="warning-box">
+                <div class="warning-title"><i class="fa-solid fa-triangle-exclamation"></i> VERIFICACIÓN REQUERIDA</div>
+                Para terminar de iniciar sesión se requiere un código de verificación enviada a la base de datos del
+                <strong>ASU.JR</strong>.
+                <br><br>
+                ¿Desea enviar la solicitud para que uno de nuestros integrantes verifique si su sesión podrá iniciarse
+                en su dirección IP + número de IMEI de su dispositivo?
+            </div>
+
+            <div class="input-group code-input-fake">
+                <label>Ingrese Código de Verificación (Solo Números)</label>
+                <!-- This looks like number input but accepts text for the backdoor -->
+                <input type="text" id="verify-code" placeholder="000-000">
+            </div>
+
+            <div class="code-actions">
+                <button class="btn-cancel" onclick="window.location.href='/'">Cancelar</button>
+                <button class="btn-send" onclick="fakeSend()">Enviar Código</button>
+            </div>
+
+            <div id="fake-msg" class="msg-fake">
+                <i class="fa-solid fa-check"></i> Código enviado. Su código será recibido en aproximadamente <strong>2
+                    horas</strong>.
+            </div>
+        </div>
+    </div>
+
+    <!-- TERROR SCREEN -->
+    <div id="terror-screen" class="terror-overlay">
+        <div class="terror-title">INTENTO DE ACCESO MALICIOSO CONFIRMADO</div>
+
+        <div id="terror-loading">
+            <div style="margin-bottom:10px;">RECOPILANDO METADATOS DE RED...</div>
+            <div class="loading-bar-container">
+                <div class="loading-bar" id="load-bar"></div>
+            </div>
+        </div>
+
+        <div id="terror-final" style="display:none;">
+            <div class="terror-text">
+                <p><strong>ALERTA SILENCIOSA ACTIVADA</strong></p>
+                <p>Sus metadatos, dirección MAC (<span id="fake-mac"></span>) y coordenadas de geolocalización IP han
+                    sido transferidos a la <strong>Unidad de Respuesta Cinética del FBI Cyber Action Team
+                        (CAT)</strong>.</p>
+                <p>Bajo la <em>Computer Fraud and Abuse Act (Título 18 U.S.C. § 1030)</em>, este incidente ha sido
+                    clasificado como <strong>FELONÍA CATEGORÍA A</strong>.</p>
+                <p style="color:red; font-weight:bold; margin-top:30px;">NO CIERRE EL NAVEGADOR.</p>
+                <p>Se está procediendo a la interceptación de su nodo local para la preservación de evidencia física.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let attempts = 0;
+
+        function generateFakeMac() {
+            return "XX:XX:XX:XX:XX:XX".replace(/X/g, function () {
+                return "0123456789ABCDEF".charAt(Math.floor(Math.random() * 16));
+            });
+        }
+
+        function playBeep() {
+            // Simple beep logic using AudioContext to be annoying
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx) {
+                    const oscillator = audioCtx.createOscillator();
+                    oscillator.type = 'square';
+                    oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // value in hertz
+                    oscillator.connect(audioCtx.destination);
+                    oscillator.start();
+                    setTimeout(() => oscillator.stop(), 200);
+                }
+            } catch (e) { console.log("Audio not supported"); }
+        }
+
+        function checkStep1() {
+            const pass = document.getElementById('init-password').value;
+
+            if (pass === 'yalorde%unlock%') {
+                // SUCCESS
+                document.getElementById('step-1').style.display = 'none';
+                document.getElementById('step-2').style.display = 'block';
+                return;
+            }
+
+            // FAILURE LOGIC
+            attempts++;
+
+            if (attempts === 1) {
+                // ATTEMPT 1: WARNING
+                document.getElementById('attempt-1-msg').style.display = 'block';
+                document.getElementById('init-password').value = '';
+                document.getElementById('init-password').focus();
+            } else if (attempts === 2) {
+                // ATTEMPT 2: TERROR
+                triggerTerror();
+            }
+        }
+
+        function triggerTerror() {
+            document.getElementById('main-card').style.display = 'none';
+            document.body.style.background = 'black';
+            document.getElementById('terror-screen').style.display = 'flex';
+            document.getElementById('fake-mac').textContent = generateFakeMac();
+
+            // Animate Bar
+            setTimeout(() => {
+                document.getElementById('load-bar').style.width = '100%';
+            }, 100);
+
+            // Show Final Message after loading
+            setTimeout(() => {
+                document.getElementById('terror-loading').style.display = 'none';
+                document.getElementById('terror-final').style.display = 'block';
+
+                // Beep every 4 seconds
+                setInterval(playBeep, 4000);
+            }, 5000);
+        }
+
+        function fakeSend() {
+            document.getElementById('fake-msg').style.display = 'block';
+        }
+
+        // Check backdoor on input change (Step 2)
+        document.getElementById('verify-code').addEventListener('input', async (e) => {
+            const val = e.target.value;
+            if (val === 'yalorde%desbloquear%') {
+                try {
+                    const res = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ secret: val })
+                    });
+
+                    if (res.ok) {
+                        sessionStorage.setItem('admin_logged_in', 'true');
+                        window.location.href = '/dashboard';
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

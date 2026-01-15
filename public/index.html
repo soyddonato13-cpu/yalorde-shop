@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Yalorde Tentaciones | Tienda Oficial</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="menu-btn" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></div>
+        <div class="logo">YALORDE</div>
+        <div class="cart-btn" onclick="toggleCart()">
+            <i class="fa-solid fa-bag-shopping"></i>
+            <span class="badge cart-badge">0</span>
+        </div>
+    </header>
+
+    <!-- Side Menu -->
+    <div id="side-menu" class="side-menu">
+        <div class="menu-header">
+            <h3>CATEGORÍAS</h3>
+            <div class="close-btn" onclick="toggleMenu()"><i class="fa-solid fa-xmark"></i></div>
+        </div>
+        <ul class="menu-list">
+            <li onclick="filterCategory('all'); toggleMenu()">Todo</li>
+            <li onclick="filterCategory('vestidos'); toggleMenu()">Vestidos</li>
+            <li onclick="filterCategory('tops'); toggleMenu()">Blusas & Tops</li>
+            <li onclick="filterCategory('bottoms'); toggleMenu()">Pantalones & Jeans</li>
+            <li onclick="filterCategory('calzado'); toggleMenu()">Calzado</li>
+            <li class="admin-link" onclick="window.location.href='admin.html'"> <i class="fa-solid fa-lock"></i> Acceso
+                Admin</li>
+        </ul>
+    </div>
+    <div id="menu-overlay" class="overlay" onclick="toggleMenu()"></div>
+
+    <!-- Info Bar -->
+    <div class="stock-ticker">
+        <span class="ticker-text" id="cms-info-bar">
+            <!-- Loaded from CMS -->
+            <i class="fa-solid fa-truck"></i> Envíos a todo el país | Compra 100% Segura
+        </span>
+    </div>
+
+    <!-- Main Content -->
+    <main class="app-content">
+
+        <!-- HERO SECTION (CMS) -->
+        <section class="hero-section" id="cms-hero"
+            style="background-image: url('https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop');">
+            <div class="hero-overlay">
+                <h1 id="cms-hero-title">La Elegancia que Mereces</h1>
+                <p id="cms-hero-sub">Descubre nuestra nueva colección.</p>
+                <button class="hero-btn"
+                    onclick="document.getElementById('product-grid').scrollIntoView({behavior: 'smooth'})">VER
+                    COLECCIÓN</button>
+            </div>
+        </section>
+        <!-- Hero Stories -->
+        <section class="stories-container">
+            <div class="story-item" onclick="filterCategory('vestidos')">
+                <div class="story-ring"></div>
+                <!-- Fixed URL here as well -->
+                <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500&auto=format&fit=crop&q=60"
+                    alt="New">
+                <span>NEW</span>
+            </div>
+            <div class="story-item" onclick="filterCategory('vestidos')">
+                <div class="story-ring"></div>
+                <img src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=500&auto=format&fit=crop&q=60"
+                    alt="Dresses">
+                <span>Vestidos</span>
+            </div>
+            <div class="story-item" onclick="filterCategory('calzado')">
+                <div class="story-ring"></div>
+                <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=500&auto=format&fit=crop&q=60"
+                    alt="Sale">
+                <span>SALE</span>
+            </div>
+            <div class="story-item" onclick="filterCategory('calzado')">
+                <div class="story-ring"></div>
+                <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=500&auto=format&fit=crop&q=60"
+                    alt="Shoes">
+                <span>Calzado</span>
+            </div>
+            <div class="story-item" onclick="filterCategory('tops')">
+                <div class="story-ring"></div>
+                <img src="https://images.unsplash.com/photo-1617137968427-85924c800a22?w=500&auto=format&fit=crop&q=60"
+                    alt="Acc">
+                <span>Tops</span>
+            </div>
+        </section>
+
+        <!-- Product Grid -->
+        <section class="products-section">
+            <div class="section-title">
+                <h3 id="category-title">TENDENCIA AHORA</h3>
+            </div>
+            <div class="product-grid" id="product-grid">
+                <!-- Products injected by JS -->
+            </div>
+        </section>
+
+        <!-- TRUST & SOCIAL PROOF -->
+        <section class="trust-section">
+            <div class="trust-grid">
+                <div class="trust-item">
+                    <i class="fa-solid fa-truck-fast"></i>
+                    <span>Envíos Nacionales</span>
+                </div>
+                <div class="trust-item">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Pago Seguro</span>
+                </div>
+                <div class="trust-item">
+                    <i class="fa-regular fa-star"></i>
+                    <span>Calidad Premium</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- TESTIMONIALS -->
+        <section class="testimonials-section">
+            <div class="section-title">
+                <h3>CLIENTES FELICES</h3>
+            </div>
+            <div class="testimonials-carousel">
+                <div class="testimonial-card">
+                    <div class="stars">★★★★★</div>
+                    <p>"¡El vestido es hermoso! La tela es increíble y me llegó súper rápido a Caracas."</p>
+                    <div class="user-info">
+                        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User">
+                        <span>María G.</span>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="stars">★★★★★</div>
+                    <p>"Atención 10/10. Tenía dudas con la talla y me ayudaron en todo momento. Recomendadas."</p>
+                    <div class="user-info">
+                        <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="User">
+                        <span>Ana P.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ -->
+        <section class="faq-section">
+            <div class="section-title">
+                <h3>PREGUNTAS FRECUENTES</h3>
+            </div>
+            <div class="faq-accordion">
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>¿Hacen envíos a todo el país?</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Sí, realizamos envíos a nivel nacional a través de MRW y Zoom con cobro en destino.</p>
+                    </div>
+                </div>
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>¿Cuáles son los métodos de pago?</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Aceptamos Pago Móvil, Transferencias Banesco, Zelle y Binance Pay.</p>
+                    </div>
+                </div>
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>¿Tienen tienda física?</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Sí, nuestra sede principal está en Maracay. Visítanos en el <strong>C.C. Unicentro (Local
+                                1-45)</strong> o en el <strong>C.C. Paseo Estación Central (Nivel 1, Local
+                                054-055)</strong>.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                <div class="footer-logo">YALORDE</div>
+                <p class="footer-slogan">Moda que inspira confianza.</p>
+
+                <div class="social-links">
+                    <a href="#" class="social-btn" id="cms-social-insta" target="_blank"><i
+                            class="fa-brands fa-instagram"></i></a>
+                    <a href="#" class="social-btn" id="cms-social-tiktok" target="_blank"><i
+                            class="fa-brands fa-tiktok"></i></a>
+                    <a href="#" class="social-btn" id="cms-social-wa" target="_blank"><i
+                            class="fa-brands fa-whatsapp"></i></a>
+                </div>
+
+                <div class="footer-links">
+                    <a href="#">Términos y Condiciones</a>
+                    <a href="#">Política de Privacidad</a>
+                    <a href="#">Sobre Nosotros</a>
+                </div>
+
+                <p class="copyright">© 2026 Yalorde Tentaciones. Todos los derechos reservados.</p>
+            </div>
+        </footer>
+    </main>
+
+    <!-- PRODUCT DETAIL MODAL -->
+    <div id="product-modal" class="modal">
+        <div class="modal-content product-modal-content">
+            <div class="close-modal-btn" onclick="closeProductModal()"><i class="fa-solid fa-xmark"></i></div>
+            <div class="modal-img-container">
+                <img id="modal-img" src="" alt="">
+            </div>
+            <div class="modal-info">
+                <h2 id="modal-title">Product Title</h2>
+                <div class="modal-price" id="modal-price">$0.00</div>
+                <p class="modal-desc" id="modal-desc">Description here.</p>
+
+                <div class="size-selector">
+                    <h4>Selecciona Talla:</h4>
+                    <div class="sizes-grid" id="modal-sizes">
+                        <!-- Dynamic Sizes -->
+                    </div>
+                </div>
+
+                <div class="modal-buttons" style="display:flex; gap:10px;">
+                    <button class="add-to-cart-btn" id="modal-add-btn" disabled>
+                        AÑADIR
+                    </button>
+                    <button class="add-to-cart-btn" id="modal-buy-btn" style="background:#000;" disabled>
+                        COMPRAR YA
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CART SIDEBAR -->
+    <div id="cart-sidebar" class="cart-sidebar">
+        <div class="cart-header">
+            <h3>TU BOLSA (<span class="cart-count">0</span>)</h3>
+            <div class="close-btn" onclick="toggleCart()"><i class="fa-solid fa-xmark"></i></div>
+        </div>
+        <div class="cart-items" id="cart-items">
+            <!-- Items injected by JS -->
+            <div class="empty-cart-msg">Tu bolsa está vacía</div>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cart-total-price">$0.00</span>
+            </div>
+            <button class="checkout-btn" onclick="openCheckout()">PROCESAR COMPRA</button>
+        </div>
+    </div>
+    <div id="cart-overlay" class="overlay" onclick="toggleCart()"></div>
+
+    <!-- CHECKOUT MODAL -->
+    <div id="checkout-modal" class="modal">
+        <div class="modal-content checkout-modal-content">
+            <div class="close-modal-btn" onclick="closeCheckout()"><i class="fa-solid fa-xmark"></i></div>
+            <h3>Finalizar Pedido</h3>
+
+            <!-- Step 1: Data -->
+            <div id="checkout-step-1">
+                <div class="form-group">
+                    <label>Nombre Completo</label>
+                    <input type="text" id="cust-name" placeholder="Tu nombre">
+                </div>
+                <div class="form-group">
+                    <label>WhatsApp</label>
+                    <input type="tel" id="cust-phone" placeholder="0414-XXXXXXX">
+                </div>
+                <div class="form-group">
+                    <label>Método de Entrega</label>
+                    <select id="cust-delivery">
+                        <option value="pickup">Retiro en Tienda (Gratis)</option>
+                        <option value="mrw">Envío Nacional (MRW/Zoom - Cobro Destino)</option>
+                        <option value="delivery">Delivery Maracay ($3)</option>
+                    </select>
+                </div>
+                <button class="step-btn" onclick="goToPayment()">CONTINUAR A PAGO</button>
+            </div>
+
+            <!-- Step 2: Payment -->
+            <div id="checkout-step-2" style="display: none;">
+                <h4>MÉTODO DE PAGO</h4>
+                <div class="payment-options">
+                    <div class="pay-option" onclick="selectPayment('pago_movil', this)">
+                        <i class="fa-solid fa-mobile-screen"></i> Pago Móvil
+                    </div>
+                    <div class="pay-option" onclick="selectPayment('binance', this)">
+                        <i class="fa-brands fa-bitcoin"></i> Binance Pay
+                    </div>
+                    <div class="pay-option" onclick="selectPayment('zelle', this)">
+                        <i class="fa-solid fa-dollar-sign"></i> Zelle
+                    </div>
+                </div>
+
+                <!-- DYNAMIC INFO CONTAINER -->
+                <div id="payment-info-box" class="payment-info-box">
+                    Selecciona un método arriba para ver los datos.
+                </div>
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>Referencia / Comprobante</label>
+                    <input type="text" id="pay-ref" placeholder="Últimos 4 dígitos o Hash">
+                </div>
+
+                <button class="step-btn confirm-btn" onclick="submitOrder()">CONFIRMAR PEDIDO</button>
+                <button class="back-btn" onclick="backToStep1()">Atrás</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="filterCategory('all')"><i
+                class="fa-solid fa-house"></i><span>Inicio</span></div>
+        <div class="nav-item" onclick="toggleMenu()"><i class="fa-solid fa-magnifying-glass"></i><span>Buscar</span>
+        </div>
+        <div class="nav-item center-btn" onclick="openCheckout()"><i class="fa-solid fa-qrcode"></i></div>
+        <div class="nav-item"><i class="fa-regular fa-heart"></i><span>Favs</span></div>
+        <div class="nav-item" onclick="window.location.href='admin.html'"><i
+                class="fa-regular fa-user"></i><span>Admin</span></div>
+    </nav>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/cart.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
