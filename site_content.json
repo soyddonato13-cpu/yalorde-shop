@@ -5,5 +5,19 @@
   "infoBar": "🚚 Envíos a todo el país | 🛡️ Compra 100% Segura | 📲 Atención Personalizada",
   "whatsapp": "https://wa.me/584146756068",
   "instagram": "https://instagram.com/yalordetentaciones",
-  "tiktok": "https://www.tiktok.com/@yalorde.tentaciones"
+  "tiktok": "https://www.tiktok.com/@yalorde.tentaciones",
+  "faq": [
+    {
+      "question": "¿Hacen envíos a todo el país?",
+      "answer": "Sí, realizamos envíos a nivel nacional a través de MRW y Zoom con cobro en destino."
+    },
+    {
+      "question": "¿Cuáles son los métodos de pago?",
+      "answer": "Aceptamos Pago Móvil, Transferencias Banesco, Zelle y Binance Pay."
+    },
+    {
+      "question": "¿Tienen tienda física?",
+      "answer": "Sí, nuestra sede principal está en Maracay. Visítanos en el <strong>C.C. Unicentro (Local 1-45)</strong> o en el <strong>C.C. Paseo Estación Central (Nivel 1, Local 054-055)</strong>."
+    }
+  ]
 }

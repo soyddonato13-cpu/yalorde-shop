@@ -33,6 +33,23 @@ function applyContent(content) {
     if (content.whatsapp) document.getElementById('cms-social-wa').href = content.whatsapp;
     if (content.instagram) document.getElementById('cms-social-insta').href = content.instagram;
     if (content.tiktok) document.getElementById('cms-social-tiktok').href = content.tiktok;
+
+    if (content.faq && Array.isArray(content.faq)) {
+        const faqContainer = document.getElementById('cms-faq-list');
+        if (faqContainer) {
+            faqContainer.innerHTML = content.faq.map(item => `
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>${item.question}</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>${item.answer}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
 }
 
 // === RENDER ===
