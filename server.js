@@ -272,6 +272,8 @@ app.get('/dashboard', requireAuth, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 app.get('/dashboard.html', (req, res) => res.redirect('/dashboard'));
+app.get('/admin.html', (req, res) => res.redirect('/dashboard'));
+app.get('/admin', (req, res) => res.redirect('/dashboard'));
 
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
