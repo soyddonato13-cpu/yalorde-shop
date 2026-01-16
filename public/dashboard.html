@@ -10,12 +10,7 @@
     <link rel="stylesheet" href="/css/toast.css"> <!-- Toast Styles -->
     <script src="/js/toast.js"></script> <!-- Toast Logic -->
 
-    <script>
-        // Check Auth (Simple Cookie check)
-        if (!document.cookie.includes('admin_auth=valid_token_123')) {
-            window.location.href = '/login';
-        }
-    </script>
+    <!-- Client-side auth check removed (cookie is httpOnly) -->
     <style>
         :root {
             --primary: #e84393;
