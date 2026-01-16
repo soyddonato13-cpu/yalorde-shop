@@ -24,6 +24,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function applyContent(content) {
+    // Dynamic Theme Color
+    if (content.themeColor) {
+        document.documentElement.style.setProperty('--primary', content.themeColor);
+        // Also update button gradients or soft variants if needed, e.g.
+        // document.documentElement.style.setProperty('--primary-soft', content.themeColor + '20');
+    }
+
     if (content.heroTitle) document.getElementById('cms-hero-title').textContent = content.heroTitle;
     if (content.heroSubtitle) document.getElementById('cms-hero-sub').textContent = content.heroSubtitle;
     if (content.heroImg) document.getElementById('cms-hero').style.backgroundImage = `url('${content.heroImg}')`;
@@ -60,7 +67,13 @@ function renderProducts(products) {
         return;
     }
 
-    grid.innerHTML = products.map(product => {
+    // Sort: Trending items first
+    const sortedProducts = [...products].sort((a, b) => {
+        if (a.isTrending === b.isTrending) return 0;
+        return a.isTrending ? -1 : 1;
+    });
+
+    grid.innerHTML = sortedProducts.map(product => {
         // Find if stock is low for ANY size
         const totalStock = Object.values(product.sizes).reduce((a, b) => a + b.stock, 0);
         const lowStock = totalStock < 5 && totalStock > 0;
@@ -76,9 +89,12 @@ function renderProducts(products) {
             }
             </div>
             <div class="product-info">
-                <h4 class="product-title">${product.title}</h4>
+                <h4 class="product-title">
+                    ${product.title} 
+                    ${product.isTrending ? '<span style="font-size: 0.7em; color: orange;" title="Tendencia">🔥</span>' : ''}
+                </h4>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span class="product-price">$${product.price.toFixed(2)}</span>
+                    <span class="product-price">$${product.price ? product.price.toFixed(2) : '0.00'}</span>
                     <button class="add-btn"><i class="fa-solid fa-plus"></i></button>
                 </div>
             </div>
@@ -249,7 +265,7 @@ function renderCartItems() {
 // === CHECKOUT LOGIC ===
 function openCheckout() {
     if (Cart.items.length === 0) {
-        alert("Tu carrito está vacío.");
+        Toast.info("Tu carrito está vacío.");
         return;
     }
     toggleCart(); // Close cart
@@ -264,7 +280,7 @@ function closeCheckout() {
 
 function goToPayment() {
     const name = document.getElementById('cust-name').value;
-    if (!name) { alert("Por favor ingresa tu nombre"); return; }
+    if (!name) { Toast.error("Por favor ingresa tu nombre"); return; }
 
     document.getElementById('checkout-step-1').style.display = 'none';
     document.getElementById('checkout-step-2').style.display = 'block';
@@ -307,10 +323,10 @@ function selectPayment(method, el) {
 
 async function submitOrder() {
     const name = document.getElementById('cust-name').value;
-    if (!name) { alert("Por favor ingresa tu nombre"); return; }
+    if (!name) { Toast.error("Por favor ingresa tu nombre"); return; }
 
     const ref = document.getElementById('pay-ref').value;
-    if (!ref) { alert("Por favor ingresa la referencia de pago"); return; }
+    if (!ref) { Toast.error("Por favor ingresa la referencia de pago"); return; }
 
     const paymentMethod = document.querySelector('.pay-option.selected').getAttribute('onclick').includes('pago_movil') ? 'pago_movil' :
         (document.querySelector('.pay-option.selected').getAttribute('onclick').includes('binance') ? 'binance' : 'zelle');
@@ -335,16 +351,16 @@ async function submitOrder() {
         });
 
         if (response.ok) {
-            alert("¡Pedido Procesado Exitosamente! Te contactaremos por WhatsApp.");
+            Toast.success("¡Pedido Procesado Exitosamente! Te contactaremos por WhatsApp.");
             Cart.clear();
             closeCheckout();
-            location.reload();
+            setTimeout(() => location.reload(), 3000);
         } else {
-            alert("Hubo un error al procesar el pedido. Intenta de nuevo.");
+            Toast.error("Hubo un error al procesar el pedido. Intenta de nuevo.");
         }
     } catch (error) {
         console.error("Error submitting order:", error);
-        alert("Error de conexión");
+        Toast.error("Error de conexión");
     } finally {
         submitBtn.textContent = "Finalizar Pedido";
         submitBtn.disabled = false;

@@ -2,8 +2,14 @@ const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
 const cookieParser = require('cookie-parser');
+const fs = require('fs');
+const mongoose = require('mongoose');
+
+// Models
+const Product = require('./models/Product');
+const Order = require('./models/Order');
+const SiteContent = require('./models/SiteContent');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,47 +17,17 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
-// Serve static files, BUT we need to intercept dashboard.html
-// So we serve public folder but manually handle sensitive files first
-
-// Auth Middleware
-const requireAuth = (req, res, next) => {
-    if (req.cookies.admin_auth === 'valid_token_123') {
-        next();
-    } else {
-        res.redirect('/login');
-    }
-};
-
-// CLEAN URL ROUTES
-
-// Login Page
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-// Protect Dashboard
-app.get('/dashboard', requireAuth, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
-});
-
-// Redirects for .html extentions
-app.get('/login.html', (req, res) => res.redirect('/login'));
-app.get('/dashboard.html', (req, res) => res.redirect('/dashboard'));
-app.get('/admin.html', (req, res) => res.redirect('/dashboard'));
-app.get('/admin', (req, res) => res.redirect('/dashboard'));
-
-// Serve Public Files
 app.use(express.static('public'));
+app.use('/uploads', express.static('uploads'));
 
 // Configure Multer for Image Uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadDir = 'public/uploads';
+        const uploadDir = path.join(__dirname, 'public', 'uploads');
         if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir);
+            fs.mkdirSync(uploadDir, { recursive: true });
         }
         cb(null, uploadDir);
     },
@@ -61,24 +37,57 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-const DB_FILE = 'products.json';
+// MongoDB Connection
+const MONGO_URI = "mongodb+srv://isaronstudio_db_user:9qAPPeUHUCA5VVei@cluster0.o6p9ft3.mongodb.net/yalorde_db?retryWrites=true&w=majority&appName=Cluster0";
 
-// Helper to read DB
-const readDB = () => {
+mongoose.connect(MONGO_URI)
+    .then(async () => {
+        console.log('✅ Connected to MongoDB Atlas');
+        await seedDatabase();
+    })
+    .catch(err => console.error('❌ MongoDB Connection Error:', err));
+
+// Seeding Logic (Migrate from JSON if DB is empty)
+async function seedDatabase() {
     try {
-        const data = fs.readFileSync(DB_FILE, 'utf8');
-        return JSON.parse(data);
+        // Check Products
+        const prodCount = await Product.countDocuments();
+        if (prodCount === 0) {
+            console.log('📦 Seeding Products from JSON...');
+            if (fs.existsSync('products.json')) {
+                const data = JSON.parse(fs.readFileSync('products.json', 'utf8'));
+                // Ensure IDs are strings and fields match schema
+                const products = data.map(p => ({ ...p, id: String(p.id) }));
+                await Product.insertMany(products);
+                console.log('✅ Products seeded');
+            }
+        }
+
+        // Check Content
+        const contentCount = await SiteContent.countDocuments();
+        if (contentCount === 0) {
+            console.log('🎨 Seeding Content from JSON...');
+            if (fs.existsSync('site_content.json')) {
+                const data = JSON.parse(fs.readFileSync('site_content.json', 'utf8'));
+                await SiteContent.create(data);
+                console.log('✅ Content seeded');
+            }
+        }
     } catch (err) {
-        return [];
+        console.error('Migration Error:', err);
+    }
+}
+
+// Auth Middleware
+const requireAuth = (req, res, next) => {
+    if (req.cookies.admin_auth === 'valid_token_123') { // Updated token to match valid_token_123 used in login
+        next();
+    } else {
+        res.status(401).json({ error: 'Unauthorized' });
     }
 };
 
-// Helper to write DB
-const writeDB = (data) => {
-    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
-};
-
-// Routes
+// --- API ROUTES ---
 
 // LOGIN Endpoint
 app.post('/api/login', (req, res) => {
@@ -91,38 +100,52 @@ app.post('/api/login', (req, res) => {
     }
 });
 
-// GET Products
-app.get('/api/products', (req, res) => {
-    const products = readDB();
-    res.json(products);
+// Admin Login Route (Form) - Keeping for compatibility if used
+app.post('/admin-login', (req, res) => {
+    const { password } = req.body;
+    if (password === 'admin123') {
+        res.cookie('admin_auth', 'valid_token_123', { httpOnly: true });
+        res.json({ success: true });
+    } else {
+        res.status(401).json({ error: 'Invalid password' });
+    }
 });
 
-// POST Product (Admin Panel) - PROTECTED
-app.post('/api/products', requireAuth, upload.single('image'), (req, res) => {
+// 1. PRODUCTS
+app.get('/api/products', async (req, res) => {
+    try {
+        const products = await Product.find();
+        res.json(products);
+    } catch (err) {
+        res.status(500).json({ error: 'Error fetching products' });
+    }
+});
+
+app.post('/api/products', requireAuth, upload.single('image'), async (req, res) => {
     try {
         const { title, category, price, description, sizes } = req.body;
-        const products = readDB();
+        const isTrending = req.body.isTrending === 'true' || req.body.isTrending === 'on';
 
         let imageUrl = '';
         if (req.file) {
+            // Save relative path for frontend
             imageUrl = 'uploads/' + req.file.filename;
         } else {
             imageUrl = req.body.imageUrl || 'https://via.placeholder.com/500';
         }
 
-        const newProduct = {
+        const newProduct = new Product({
             id: Date.now().toString(),
-            category,
             title,
+            category,
             price: parseFloat(price),
-            img: imageUrl,
             description,
-            sizes: JSON.parse(sizes)
-        };
+            img: imageUrl,
+            sizes: JSON.parse(sizes),
+            isTrending
+        });
 
-        products.push(newProduct);
-        writeDB(products);
-
+        await newProduct.save();
         res.status(201).json(newProduct);
     } catch (err) {
         console.error(err);
@@ -130,20 +153,47 @@ app.post('/api/products', requireAuth, upload.single('image'), (req, res) => {
     }
 });
 
-// DELETE Product - PROTECTED
-app.delete('/api/products/:id', requireAuth, (req, res) => {
+app.put('/api/products/:id', requireAuth, upload.single('image'), async (req, res) => {
     try {
         const { id } = req.params;
-        let products = readDB();
+        const { title, category, price, description, sizes } = req.body;
+        const isTrending = req.body.isTrending === 'true' || req.body.isTrending === 'on';
 
-        const initialLength = products.length;
-        products = products.filter(p => p.id !== id);
+        // Find product first
+        const product = await Product.findOne({ id: id });
+        if (!product) return res.status(404).json({ error: 'Product not found' });
 
-        if (products.length === initialLength) {
-            return res.status(404).json({ error: 'Product not found' });
+        let imageUrl = product.img;
+        if (req.file) {
+            imageUrl = 'uploads/' + req.file.filename;
         }
 
-        writeDB(products);
+        const updateData = {
+            title,
+            category,
+            price: parseFloat(price),
+            description,
+            img: imageUrl,
+            sizes: JSON.parse(sizes),
+            isTrending
+        };
+
+        const updatedProduct = await Product.findOneAndUpdate({ id: id }, updateData, { new: true });
+        res.json({ success: true, product: updatedProduct });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error updating product' });
+    }
+});
+
+app.delete('/api/products/:id', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await Product.findOneAndDelete({ id: id });
+
+        if (!result) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
         res.json({ success: true, message: 'Deleted successfully' });
     } catch (err) {
         console.error(err);
@@ -151,94 +201,82 @@ app.delete('/api/products/:id', requireAuth, (req, res) => {
     }
 });
 
-const ORDERS_FILE = 'orders.json';
-
-// Helper to read Orders
-const readOrders = () => {
+// 2. ORDERS
+app.get('/api/orders', requireAuth, async (req, res) => {
     try {
-        const data = fs.readFileSync(ORDERS_FILE, 'utf8');
-        return JSON.parse(data);
+        const orders = await Order.find().sort({ date: -1 });
+        res.json(orders);
     } catch (err) {
-        return [];
+        res.status(500).json({ error: 'Error fetching orders' });
     }
-};
+});
 
-// Helper to write Orders
-const writeOrders = (data) => {
-    fs.writeFileSync(ORDERS_FILE, JSON.stringify(data, null, 2));
-};
-
-// POST Order (Public - Checkout)
-app.post('/api/orders', (req, res) => {
+app.post('/api/orders', async (req, res) => {
     try {
         const { customer, items, total, paymentMethod, paymentRef } = req.body;
-        const orders = readOrders();
 
-        const newOrder = {
-            id: Date.now().toString(),
-            date: new Date().toISOString(),
-            status: 'pending', // pending, paid, shipped
+        const newOrder = new Order({
             customer,
             items,
             total,
             paymentMethod,
             paymentRef
-        };
+        });
 
-        orders.push(newOrder);
-        writeOrders(orders);
-
-        res.status(201).json({ success: true, orderId: newOrder.id });
+        await newOrder.save();
+        res.status(201).json({ success: true, orderId: newOrder._id });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Error processing order' });
+        res.status(500).json({ error: 'Error saving order' });
     }
 });
 
-// GET Orders (Protected - Admin)
-app.get('/api/orders', requireAuth, (req, res) => {
-    const orders = readOrders();
-    // Sort by new
-    res.json(orders.sort((a, b) => b.id - a.id));
-});
-
-
-// === CMS CONTENT ===
-const CONTENT_FILE = 'site_content.json';
-
-const readContent = () => {
+// 3. CMS CONTENT
+app.get('/api/content', async (req, res) => {
     try {
-        const data = fs.readFileSync(CONTENT_FILE, 'utf8');
-        return JSON.parse(data);
+        // Try to find the single content document, or create if missing (though seed should handle it)
+        let content = await SiteContent.findOne();
+        if (!content) content = {};
+        res.json(content);
     } catch (err) {
-        return {};
+        res.status(500).json({ error: 'Error fetching content' });
     }
-};
-
-const writeContent = (data) => {
-    fs.writeFileSync(CONTENT_FILE, JSON.stringify(data, null, 2));
-};
-
-// GET Content (Public)
-app.get('/api/content', (req, res) => {
-    const content = readContent();
-    res.json(content);
 });
 
-// POST Content (Protected - Admin)
-app.post('/api/content', requireAuth, (req, res) => {
+app.post('/api/content', requireAuth, async (req, res) => {
     try {
-        const newContent = req.body;
-        writeContent(newContent);
-        res.json({ success: true, content: newContent });
+        // Upsert: update the first document found, or create new
+        const content = await SiteContent.findOne();
+
+        if (content) {
+            await SiteContent.findByIdAndUpdate(content._id, req.body);
+        } else {
+            await SiteContent.create(req.body);
+        }
+
+        res.json({ success: true });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error saving content' });
     }
 });
 
-// Start Server
+
+// Routes for Pages
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Protect Dashboard Pages
+app.get('/dashboard', requireAuth, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+app.get('/dashboard.html', (req, res) => res.redirect('/dashboard'));
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
 app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
-    console.log(`Open http://localhost:${PORT} in your browser`);
+    console.log(`Server running on port ${PORT}`);
 });
