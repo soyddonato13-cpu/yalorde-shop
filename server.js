@@ -84,7 +84,7 @@ const requireAuth = (req, res, next) => {
 // LOGIN
 app.post('/api/login', (req, res) => {
     const { secret } = req.body;
-    if (secret === 'yalorde%desbloquear%') {
+    if (secret === 'moneymoney') {
         res.cookie('admin_auth', 'valid_token_123', { httpOnly: true, secure: true, sameSite: 'None' }); // Added secure flags for Prod
         res.json({ success: true });
     } else {
@@ -237,7 +237,11 @@ app.post('/api/content', requireAuth, async (req, res) => {
 });
 
 // Redirects (Frontend Handled by Netlify _redirects usually, but keeping API redirects)
-app.get('/dashboard', requireAuth, (req, res) => res.redirect('/dashboard.html'));
+// Redirects
+app.get('/dashboard', (req, res) => res.redirect('/')); // Redirect old dashboard to home
+app.get('/login', (req, res) => res.redirect('/')); // Redirect old login to home
+app.get('/acceso-x7z', (req, res) => res.sendFile(path.join(__dirname, 'public/acceso-x7z.html')));
+app.get('/admin-privado-7392', requireAuth, (req, res) => res.sendFile(path.join(__dirname, 'public/admin-privado-7392.html')));
 
 // Netlify Handler
 const handler = serverless(app);

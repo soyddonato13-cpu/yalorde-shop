@@ -40,10 +40,16 @@ body {
 }
 
 .logo {
-    font-family: 'Playfair Display', serif;
-    font-weight: 700;
-    font-size: 1.5rem;
-    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo img {
+    height: 40px;
+    /* Adjust based on header size */
+    width: auto;
+    object-fit: contain;
 }
 
 .menu-btn,

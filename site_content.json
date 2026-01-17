@@ -1,10 +1,10 @@
 {
   "heroTitle": "La Elegancia que Mereces",
-  "heroSubtitle": "Descubre nuestra nueva colección de verano con diseños exclusivos que resaltan tu belleza única.",
+  "heroSubtitle": "¡Si amas la ropa y los zapatos, esta será tu tienda favorita! Todas las semanas Nueva Colección.",
   "heroImg": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop",
   "infoBar": "🚚 Envíos a todo el país | 🛡️ Compra 100% Segura | 📲 Atención Personalizada",
   "whatsapp": "https://wa.me/584146756068",
-  "instagram": "https://instagram.com/yalordetentaciones",
+  "instagram": "https://www.instagram.com/yalordetentaciones/",
   "tiktok": "https://www.tiktok.com/@yalorde.tentaciones",
   "faq": [
     {
@@ -16,8 +16,9 @@
       "answer": "Aceptamos Pago Móvil, Transferencias Banesco, Zelle y Binance Pay."
     },
     {
-      "question": "¿Tienen tienda física?",
-      "answer": "Sí, nuestra sede principal está en Maracay. Visítanos en el <strong>C.C. Unicentro (Local 1-45)</strong> o en el <strong>C.C. Paseo Estación Central (Nivel 1, Local 054-055)</strong>."
+      "answer": "Sí, nuestra sede principal está en Maracay. Visítanos en el <strong>C.C. Paseo Estación Central</strong>, Nivel 1 (Frente a General Import). También estamos en Av. Constitución."
     }
-  ]
+  ],
+  "email": "yalordetentaciones6086@gmail.com",
+  "facebook": "https://www.facebook.com/profile.php?id=100041893275893"
 }

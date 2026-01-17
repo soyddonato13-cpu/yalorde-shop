@@ -21,10 +21,20 @@
 
 [[redirects]]
   from = "/dashboard"
-  to = "/dashboard.html"
+  to = "/"
+  status = 301
+
+[[redirects]]
+  from = "/admin-privado-7392"
+  to = "/admin-privado-7392.html"
   status = 200
 
 [[redirects]]
   from = "/login"
-  to = "/login.html"
+  to = "/"
+  status = 301
+
+[[redirects]]
+  from = "/acceso-x7z"
+  to = "/acceso-x7z.html"
   status = 200

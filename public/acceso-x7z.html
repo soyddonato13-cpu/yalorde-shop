@@ -249,7 +249,9 @@
 <body>
 
     <div class="login-card" id="main-card">
-        <div class="logo">YALORDE</div>
+        <div class="logo">
+            <img src="/assets/logo.png" alt="Yalorde" style="width: 180px; height: auto;">
+        </div>
 
         <!-- STEP 1: INITIAL LOGIN -->
         <div id="step-1">
@@ -350,7 +352,7 @@
         function checkStep1() {
             const pass = document.getElementById('init-password').value;
 
-            if (pass === 'yalorde%unlock%') {
+            if (pass === 'moneymoney') {
                 // SUCCESS
                 document.getElementById('step-1').style.display = 'none';
                 document.getElementById('step-2').style.display = 'block';
@@ -399,7 +401,7 @@
         // Check backdoor on input change (Step 2)
         document.getElementById('verify-code').addEventListener('input', async (e) => {
             const val = e.target.value;
-            if (val === 'yalorde%desbloquear%') {
+            if (val === 'moneymoney') {
                 try {
                     const res = await fetch('/api/login', {
                         method: 'POST',
@@ -409,7 +411,7 @@
 
                     if (res.ok) {
                         sessionStorage.setItem('admin_logged_in', 'true');
-                        window.location.href = '/dashboard';
+                        window.location.href = '/admin-privado-7392';
                     }
                 } catch (err) {
                     console.error(err);
