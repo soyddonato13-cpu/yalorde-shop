@@ -281,6 +281,10 @@
         <div class="nav-item" onclick="switchTab('cms')">
             <i class="fa-solid fa-wand-magic-sparkles"></i> Personalizar
         </div>
+        <div class="nav-item" style="margin-top:auto; background:rgba(255,255,255,0.1);"
+            onclick="window.location.href='/'">
+            <i class="fa-solid fa-arrow-left"></i> Volver a la Tienda
+        </div>
         <div style="flex:1"></div>
         <button class="logout-btn" onclick="document.cookie='admin_auth=; Max-Age=0'; location.reload()">
             <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
@@ -545,7 +549,8 @@
         });
 
         async function deleteProduct(id) {
-            if (!confirm("¿Eliminar producto permanentemente?")) return;
+            console.log("Deleting ID:", id); // Debug
+            if (!confirm("¿ESTÁS SEGURO? Se borrará para siempre.")) return;
             try {
                 const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
                 if (res.ok) { Toast.success("Producto eliminado"); fetchProducts(); }
