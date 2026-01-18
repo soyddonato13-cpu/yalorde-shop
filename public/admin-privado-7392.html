@@ -415,51 +415,204 @@
             <div class="header">
                 <div class="page-title">Personalizar Tienda</div>
             </div>
-            <!-- ... CMS content ... -->
+
             <div class="card">
                 <h3>🎨 Apariencia</h3>
                 <form id="cms-form">
-                    <!-- ... inputs ... -->
-                    <!-- Replacing up to CMS fetch function start -->
+                    <div class="form-grid">
+                        <div>
+                            <label>Color Principal (Botones, Iconos)</label>
+                            <input type="color" name="themeColor" id="cms-color" value="#e84393">
+                        </div>
+                        <div>
+                            <label>Mensaje Barra Superior</label>
+                            <input type="text" name="infoBar" id="cms-infobar"
+                                placeholder="Ej: Envío Gratis a toda Venezuela 🇻🇪">
+                        </div>
+                    </div>
 
-                    <!-- SCRIPT LOGIC REPLACEMENT BELOW -->
-                    <script>
-                        let allProducts = [];
-                        let allOrders = []; // Store orders globally for filtering
+                    <div class="form-grid">
+                        <div>
+                            <label>Título Principal</label>
+                            <input type="text" name="heroTitle" id="cms-hero-title"
+                                placeholder="Ej: Nueva Colección 2024">
+                        </div>
+                        <div>
+                            <label>Subtítulo</label>
+                            <input type="text" name="heroSubtitle" id="cms-hero-sub"
+                                placeholder="Ej: Brilla con luz propia">
+                        </div>
+                    </div>
 
-                        // ... (Navigation and Product logic remains) ...
-                        // ... (Place this AFTER deleteProduct function) ...
+                    <h3>📱 Redes Sociales & Contacto</h3>
+                    <div class="form-grid">
+                        <input type="text" name="whatsapp" id="cms-wa" placeholder="Link WhatsApp (https://wa.me/...)">
+                        <input type="text" name="instagram" id="cms-ig" placeholder="Link Instagram">
+                        <input type="text" name="tiktok" id="cms-tt" placeholder="Link TikTok">
+                    </div>
 
-                        // --- ORDERS LOGIC 2.0 ---
-                        async function fetchOrders() {
-                            try {
-                                const res = await fetch('/api/orders');
-                                allOrders = await res.json();
-                                renderOrders(allOrders);
-                            } catch (e) { Toast.error("Error cargando pedidos"); }
-                        }
+                    <button type="submit" class="submit-btn" style="margin-top: 20px;">Guardar Cambios</button>
+                </form>
+            </div>
+        </div>
 
-                        function renderOrders(orders) {
-                            const tbody = document.getElementById('orders-list');
-                            if (orders.length === 0) {
-                                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">No hay pedidos encontrados.</td></tr>';
-                                return;
-                            }
+    </div>
 
-                            const statusColors = {
-                                'pending': '#f1c40f', 'approved': '#2ecc71', 'shipped': '#3498db',
-                                'delivered': '#9b59b6', 'cancelled': '#e74c3c'
-                            };
-                            const statusLabels = {
-                                'pending': 'Pendiente', 'approved': 'Aprobado', 'shipped': 'Enviado',
-                                'delivered': 'Entregado', 'cancelled': 'Cancelado'
-                            };
+    <!-- MAIN SCRIPT -->
+    <script>
+        let allProducts = [];
+        let allOrders = [];
 
-                            tbody.innerHTML = orders.map(o => {
-                                // Compatibility check for old string customers
-                                const custName = typeof o.customer === 'object' ? o.customer.name : o.customer;
+        // --- NAVIGATION ---
+        function switchTab(tabName) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
 
-                                return `
+            document.getElementById(`view-${tabName}`).classList.add('active');
+
+            // Highlight Menu
+            const icons = { 'inventory': 0, 'orders': 1, 'cms': 2 };
+            document.querySelectorAll('.nav-item')[icons[tabName]].classList.add('active');
+
+            if (tabName === 'inventory') fetchProducts();
+            if (tabName === 'orders') fetchOrders();
+            if (tabName === 'cms') fetchCMS();
+        }
+
+        // --- INVENTORY LOGIC ---
+        async function fetchProducts() {
+            try {
+                const res = await fetch('/api/products');
+                allProducts = await res.json();
+                renderInventory(allProducts);
+            } catch (e) { console.error(e); Toast.error('Error cargando productos'); }
+        }
+
+        function renderInventory(products) {
+            const list = document.getElementById('inv-list');
+            const sorted = products.sort((a, b) => a.isTrending ? -1 : 1); // Trending first
+
+            list.innerHTML = sorted.map(p => `
+                <div class="inv-item">
+                    <div class="inv-info">
+                        <img src="${p.img}" class="inv-img">
+                        <div>
+                            <div style="font-weight:600;">${p.title} ${p.isTrending ? '🔥' : ''}</div>
+                            <div style="font-size:0.8rem; color:#888;">$${p.price.toFixed(2)} | Stock: ${Object.values(p.sizes).reduce((a, b) => a + (b.stock || 0), 0)}</div>
+                        </div>
+                    </div>
+                     <div>
+                        <button class="btn-action btn-edit" onclick="editProduct('${p.id}')"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn-action btn-delete" onclick="deleteProduct('${p.id}')"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Edit Product (Populate Form)
+        function editProduct(id) {
+            const p = allProducts.find(prod => String(prod.id) === String(id));
+            if (!p) return;
+
+            document.getElementById('edit-id').value = p.id;
+            document.getElementById('inp-title').value = p.title;
+            document.getElementById('inp-category').value = p.category;
+            document.getElementById('inp-price').value = p.price;
+            document.getElementById('inp-desc').value = p.description;
+            document.getElementById('inp-trending').checked = !!p.isTrending;
+
+            document.getElementById('qty-s').value = p.sizes.S ? p.sizes.S.stock : 0;
+            document.getElementById('qty-m').value = p.sizes.M ? p.sizes.M.stock : 0;
+            document.getElementById('qty-l').value = p.sizes.L ? p.sizes.L.stock : 0;
+
+            // UI Changes
+            document.getElementById('form-header-title').textContent = "Editar Producto";
+            document.getElementById('save-btn').textContent = "Actualizar";
+            document.getElementById('cancel-btn').style.display = 'block';
+            document.getElementById('current-img-msg').style.display = 'block';
+
+            document.querySelector('.main-content').scrollTop = 0;
+        }
+
+        function resetForm() {
+            document.getElementById('product-form').reset();
+            document.getElementById('edit-id').value = "";
+            document.getElementById('form-header-title').textContent = "Agregar Nuevo Producto";
+            document.getElementById('save-btn').textContent = "Guardar Producto";
+            document.getElementById('cancel-btn').style.display = 'none';
+            document.getElementById('current-img-msg').style.display = 'none';
+        }
+
+        // Submit Product
+        document.getElementById('product-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('save-btn');
+            btn.textContent = "Guardando...";
+            btn.disabled = true;
+
+            const formData = new FormData(e.target);
+            const sizes = {
+                "S": { stock: parseInt(document.getElementById('qty-s').value) || 0 },
+                "M": { stock: parseInt(document.getElementById('qty-m').value) || 0 },
+                "L": { stock: parseInt(document.getElementById('qty-l').value) || 0 }
+            };
+            formData.append('sizes', JSON.stringify(sizes));
+            formData.append('isTrending', document.getElementById('inp-trending').checked);
+            const editId = document.getElementById('edit-id').value;
+
+            try {
+                const url = editId ? `/api/products/${editId}` : '/api/products';
+                const method = editId ? 'PUT' : 'POST';
+
+                const res = await fetch(url, { method, body: formData });
+                if (res.ok) {
+                    Toast.success("Producto guardado exitosamente");
+                    resetForm();
+                    fetchProducts();
+                } else {
+                    Toast.error("Error al guardar");
+                }
+            } catch (err) { Toast.error("Error de conexión"); }
+            finally { btn.textContent = editId ? "Actualizar" : "Guardar Producto"; btn.disabled = false; }
+        });
+
+        async function deleteProduct(id) {
+            if (!confirm("¿ESTÁS SEGURO? Se borrará para siempre.")) return;
+            try {
+                const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+                if (res.ok) { Toast.success("Producto eliminado"); fetchProducts(); }
+                else Toast.error("Error al eliminar");
+            } catch (e) { Toast.error("Error de conexión"); }
+        }
+
+        // --- ORDERS LOGIC 2.0 ---
+        async function fetchOrders() {
+            try {
+                const res = await fetch('/api/orders');
+                allOrders = await res.json();
+                renderOrders(allOrders);
+            } catch (e) { Toast.error("Error cargando pedidos"); }
+        }
+
+        function renderOrders(orders) {
+            const tbody = document.getElementById('orders-list');
+            if (orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">No hay pedidos encontrados.</td></tr>';
+                return;
+            }
+
+            const statusColors = {
+                'pending': '#f1c40f', 'approved': '#2ecc71', 'shipped': '#3498db',
+                'delivered': '#9b59b6', 'cancelled': '#e74c3c'
+            };
+            const statusLabels = {
+                'pending': 'Pendiente', 'approved': 'Aprobado', 'shipped': 'Enviado',
+                'delivered': 'Entregado', 'cancelled': 'Cancelado'
+            };
+
+            tbody.innerHTML = orders.map(o => {
+                const custName = typeof o.customer === 'object' ? o.customer.name : o.customer;
+                return `
                 <tr>
                     <td>${new Date(o.date).toLocaleDateString()} ${new Date(o.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                     <td>
@@ -477,44 +630,44 @@
                     </td>
                 </tr>
             `}).join('');
-                        }
+        }
 
-                        function filterOrders() {
-                            const term = document.getElementById('order-search').value.toLowerCase();
-                            const status = document.getElementById('order-filter-status').value;
+        function filterOrders() {
+            const term = document.getElementById('order-search').value.toLowerCase();
+            const status = document.getElementById('order-filter-status').value;
 
-                            const filtered = allOrders.filter(o => {
-                                const custName = typeof o.customer === 'object' ? o.customer.name : o.customer;
-                                const matchesTerm = custName.toLowerCase().includes(term) ||
-                                    o.paymentRef.toLowerCase().includes(term) ||
-                                    o._id.toLowerCase().includes(term);
-                                const matchesStatus = status === 'all' || o.status === status;
-                                return matchesTerm && matchesStatus;
-                            });
-                            renderOrders(filtered);
-                        }
+            const filtered = allOrders.filter(o => {
+                const custName = typeof o.customer === 'object' ? o.customer.name : o.customer;
+                const matchesTerm = custName.toLowerCase().includes(term) ||
+                    o.paymentRef.toLowerCase().includes(term) ||
+                    o._id.toLowerCase().includes(term);
+                const matchesStatus = status === 'all' || o.status === status;
+                return matchesTerm && matchesStatus;
+            });
+            renderOrders(filtered);
+        }
 
-                        let sortDesc = true;
-                        function sortOrders(field) {
-                            sortDesc = !sortDesc;
-                            allOrders.sort((a, b) => {
-                                let valA = field === 'customer' ? (typeof a.customer === 'object' ? a.customer.name : a.customer) : a[field];
-                                let valB = field === 'customer' ? (typeof b.customer === 'object' ? b.customer.name : b.customer) : b[field];
+        let sortDesc = true;
+        function sortOrders(field) {
+            sortDesc = !sortDesc;
+            allOrders.sort((a, b) => {
+                let valA = field === 'customer' ? (typeof a.customer === 'object' ? a.customer.name : a.customer) : a[field];
+                let valB = field === 'customer' ? (typeof b.customer === 'object' ? b.customer.name : b.customer) : b[field];
 
-                                if (valA < valB) return sortDesc ? 1 : -1;
-                                if (valA > valB) return sortDesc ? -1 : 1;
-                                return 0;
-                            });
-                            renderOrders(allOrders);
-                        }
+                if (valA < valB) return sortDesc ? 1 : -1;
+                if (valA > valB) return sortDesc ? -1 : 1;
+                return 0;
+            });
+            renderOrders(allOrders);
+        }
 
-                        function openOrderModal(id) {
-                            const order = allOrders.find(o => o._id === id);
-                            if (!order) return;
+        function openOrderModal(id) {
+            const order = allOrders.find(o => o._id === id);
+            if (!order) return;
 
-                            const cust = typeof order.customer === 'object' ? order.customer : { name: order.customer }; // Compat
+            const cust = typeof order.customer === 'object' ? order.customer : { name: order.customer };
 
-                            const html = `
+            const html = `
                 <div class="form-grid">
                     <div>
                         <label>Estado del Pedido</label>
@@ -562,238 +715,43 @@
                 </div>
             `;
 
-                            document.getElementById('order-modal-content').innerHTML = html;
-                            document.getElementById('order-modal').style.display = 'flex';
+            document.getElementById('order-modal-content').innerHTML = html;
+            document.getElementById('order-modal').style.display = 'flex';
 
-                            // Set save handler
-                            document.getElementById('save-order-btn').onclick = () => updateOrder(id);
-                        }
-
-                        async function updateOrder(id) {
-                            const status = document.getElementById('edit-order-status').value;
-                            const tracking = document.getElementById('edit-order-tracking').value;
-                            const notes = document.getElementById('edit-order-notes').value;
-
-                            try {
-                                const res = await fetch(`/api/orders/${id}`, {
-                                    method: 'PUT',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ status, trackingCode: tracking, notes })
-                                });
-
-                                if (res.ok) {
-                                    Toast.success("Pedido actualizado");
-                                    document.getElementById('order-modal').style.display = 'none';
-                                    fetchOrders();
-                                } else {
-                                    Toast.error("Error al actualizar");
-                                }
-                            } catch (e) { Toast.error("Error de conexión"); }
-                        }
-
-                        async function deleteOrder(id) {
-                            if (!confirm("¿ESTÁS SEGURO? Esta acción no se puede deshacer.")) return;
-                            try {
-                                const res = await fetch(`/api/orders/${id}`, { method: 'DELETE' });
-                                if (res.ok) {
-                                    Toast.success("Pedido eliminado permanentemente");
-                                    fetchOrders();
-                                } else Toast.error("Error al eliminar");
-                            } catch (e) { Toast.error("Error de conexión"); }
-                        }
-
-                        // --- CMS LOGIC ---
-                        async function fetchCMS() {
-                        <div>
-                            <label>Color Principal (Botones, Iconos)</label>
-                            <input type="color" name="themeColor" id="cms-color" value="#e84393">
-                        </div>
-                        <div>
-                            <label>Mensaje Barra Superior</label>
-                            <input type="text" name="infoBar" id="cms-infobar"
-                                placeholder="Ej: Envío Gratis a toda Venezuela 🇻🇪">
-                        </div>
-                    </div >
-
-                    <div class="form-grid">
-                        <div>
-                            <label>Título Principal</label>
-                            <input type="text" name="heroTitle" id="cms-hero-title"
-                                placeholder="Ej: Nueva Colección 2024">
-                        </div>
-                        <div>
-                            <label>Subtítulo</label>
-                            <input type="text" name="heroSubtitle" id="cms-hero-sub"
-                                placeholder="Ej: Brilla con luz propia">
-                        </div>
-                    </div>
-
-                    <h3>📱 Redes Sociales & Contacto</h3>
-                    <div class="form-grid">
-                        <input type="text" name="whatsapp" id="cms-wa" placeholder="Link WhatsApp (https://wa.me/...)">
-                        <input type="text" name="instagram" id="cms-ig" placeholder="Link Instagram">
-                        <input type="text" name="tiktok" id="cms-tt" placeholder="Link TikTok">
-                    </div>
-
-                    <button type="submit" class="submit-btn">Guardar Cambios</button>
-                </form>
-            </div>
-        </div >
-
-    </div >
-
-                                <!-- MAIN SCRIPT -->
-                                <script>
-                                    let allProducts = [];
-
-                                    // --- NAVIGATION ---
-                                    function switchTab(tabName) {
-                                        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-
-                                    document.getElementById(`view-${tabName}`).classList.add('active');
-
-                                    // Highlight Menu
-                                    const icons = {'inventory': 0, 'orders': 1, 'cms': 2 };
-                                    document.querySelectorAll('.nav-item')[icons[tabName]].classList.add('active');
-
-                                    if (tabName === 'inventory') fetchProducts();
-                                    if (tabName === 'orders') fetchOrders();
-                                    if (tabName === 'cms') fetchCMS();
+            document.getElementById('save-order-btn').onclick = () => updateOrder(id);
         }
 
-                                    // --- INVENTORY LOGIC ---
-                                    async function fetchProducts() {
+        async function updateOrder(id) {
+            const status = document.getElementById('edit-order-status').value;
+            const tracking = document.getElementById('edit-order-tracking').value;
+            const notes = document.getElementById('edit-order-notes').value;
+
             try {
-                const res = await fetch('/api/products');
-                                    allProducts = await res.json();
-                                    renderInventory(allProducts);
-            } catch (e) {console.error(e); Toast.error('Error cargando productos'); }
-        }
+                const res = await fetch(`/api/orders/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status, trackingCode: tracking, notes })
+                });
 
-                                    function renderInventory(products) {
-            const list = document.getElementById('inv-list');
-            const sorted = products.sort((a, b) => a.isTrending ? -1 : 1); // Trending first
-
-            list.innerHTML = sorted.map(p => `
-                                    <div class="inv-item">
-                                        <div class="inv-info">
-                                            <img src="${p.img}" class="inv-img">
-                                                <div>
-                                                    <div style="font-weight:600;">${p.title} ${p.isTrending ? '🔥' : ''}</div>
-                                                    <div style="font-size:0.8rem; color:#888;">$${p.price.toFixed(2)} | Stock: ${Object.values(p.sizes).reduce((a, b) => a + (b.stock || 0), 0)}</div>
-                                                </div>
-                                        </div>
-                                        <div>
-                                            <button class="btn-action btn-edit" onclick="editProduct('${p.id}')"><i class="fa-solid fa-pen"></i></button>
-                                            <button class="btn-action btn-delete" onclick="deleteProduct('${p.id}')"><i class="fa-solid fa-trash"></i></button>
-                                        </div>
-                                    </div>
-                                    `).join('');
-        }
-
-                                    // Edit Product (Populate Form)
-                                    function editProduct(id) {
-            const p = allProducts.find(prod => String(prod.id) === String(id));
-                                    if (!p) return;
-
-                                    document.getElementById('edit-id').value = p.id;
-                                    document.getElementById('inp-title').value = p.title;
-                                    document.getElementById('inp-category').value = p.category;
-                                    document.getElementById('inp-price').value = p.price;
-                                    document.getElementById('inp-desc').value = p.description;
-                                    document.getElementById('inp-trending').checked = !!p.isTrending;
-
-                                    document.getElementById('qty-s').value = p.sizes.S ? p.sizes.S.stock : 0;
-                                    document.getElementById('qty-m').value = p.sizes.M ? p.sizes.M.stock : 0;
-                                    document.getElementById('qty-l').value = p.sizes.L ? p.sizes.L.stock : 0;
-
-                                    // UI Changes
-                                    document.getElementById('form-header-title').textContent = "Editar Producto";
-                                    document.getElementById('save-btn').textContent = "Actualizar";
-                                    document.getElementById('cancel-btn').style.display = 'block';
-                                    document.getElementById('current-img-msg').style.display = 'block';
-
-                                    document.querySelector('.main-content').scrollTop = 0;
-        }
-
-                                    function resetForm() {
-                                        document.getElementById('product-form').reset();
-                                    document.getElementById('edit-id').value = "";
-                                    document.getElementById('form-header-title').textContent = "Agregar Nuevo Producto";
-                                    document.getElementById('save-btn').textContent = "Guardar Producto";
-                                    document.getElementById('cancel-btn').style.display = 'none';
-                                    document.getElementById('current-img-msg').style.display = 'none';
-        }
-
-        // Submit Product
-        document.getElementById('product-form').addEventListener('submit', async (e) => {
-                                        e.preventDefault();
-                                    const btn = document.getElementById('save-btn');
-                                    btn.textContent = "Guardando...";
-                                    btn.disabled = true;
-
-                                    const formData = new FormData(e.target);
-                                    const sizes = {
-                                        "S": {stock: parseInt(document.getElementById('qty-s').value) || 0 },
-                                    "M": {stock: parseInt(document.getElementById('qty-m').value) || 0 },
-                                    "L": {stock: parseInt(document.getElementById('qty-l').value) || 0 }
-            };
-                                    formData.append('sizes', JSON.stringify(sizes));
-                                    formData.append('isTrending', document.getElementById('inp-trending').checked);
-                                    const editId = document.getElementById('edit-id').value;
-
-                                    try {
-                const url = editId ? `/api/products/${editId}` : '/api/products';
-                                    const method = editId ? 'PUT' : 'POST';
-
-                                    const res = await fetch(url, {method, body: formData });
-                                    if (res.ok) {
-                                        Toast.success("Producto guardado exitosamente");
-                                    resetForm();
-                                    fetchProducts();
+                if (res.ok) {
+                    Toast.success("Pedido actualizado");
+                    document.getElementById('order-modal').style.display = 'none';
+                    fetchOrders();
                 } else {
-                                        Toast.error("Error al guardar");
+                    Toast.error("Error al actualizar");
                 }
-            } catch (err) {Toast.error("Error de conexión"); }
-                                    finally {btn.textContent = editId ? "Actualizar" : "Guardar Producto"; btn.disabled = false; }
-        });
-
-                                    async function deleteProduct(id) {
-                                        console.log("Deleting ID:", id); // Debug
-                                    if (!confirm("¿ESTÁS SEGURO? Se borrará para siempre.")) return;
-                                    try {
-                const res = await fetch(`/api/products/${id}`, {method: 'DELETE' });
-                                    if (res.ok) {Toast.success("Producto eliminado"); fetchProducts(); }
-                                    else Toast.error("Error al eliminar");
-            } catch (e) {Toast.error("Error de conexión"); }
+            } catch (e) { Toast.error("Error de conexión"); }
         }
 
-                                    // --- ORDERS LOGIC ---
-                                    async function fetchOrders() {
+        async function deleteOrder(id) {
+            if (!confirm("¿ESTÁS SEGURO? Esta acción no se puede deshacer.")) return;
             try {
-                const res = await fetch('/api/orders');
-                                    const orders = await res.json();
-                                    const tbody = document.getElementById('orders-list');
-
-                                    if (orders.length === 0) {
-                                        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">No hay pedidos aún.</td></tr>';
-                                    return;
-                }
-
-                tbody.innerHTML = orders.map(o => `
-                                    <tr>
-                                        <td>${new Date(o.date).toLocaleDateString()}</td>
-                                        <td>${o.customer}</td>
-                                        <td style="font-weight:bold;">$${o.total.toFixed(2)}</td>
-                                        <td>${o.paymentMethod}</td>
-                                        <td><span style="font-family:monospace; background:#eee; padding:2px 5px; border-radius:4px;">${o.paymentRef}</span></td>
-                                        <td>
-                                            ${o.items.map(i => `<div style="font-size:0.8rem;">${i.qty}x ${i.title} (${i.size})</div>`).join('')}
-                                        </td>
-                                    </tr>
-                `).join('');
-            } catch (e) { Toast.error("Error cargando pedidos"); }
+                const res = await fetch(`/api/orders/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    Toast.success("Pedido eliminado permanentemente");
+                    fetchOrders();
+                } else Toast.error("Error al eliminar");
+            } catch (e) { Toast.error("Error de conexión"); }
         }
 
         // --- CMS LOGIC ---
@@ -832,24 +790,26 @@
         const fileInp = document.getElementById('file-input');
         const btnFile = document.querySelector('.btn-file');
 
-        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.querySelector('.upload-btn').classList.add('drag-active'); });
-        dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.querySelector('.upload-btn').classList.remove('drag-active'); });
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.querySelector('.upload-btn').classList.remove('drag-active');
-            if (e.dataTransfer.files.length) {
-                fileInp.files = e.dataTransfer.files;
-                btnFile.textContent = "✅ " + fileInp.files[0].name;
-            }
-        });
-        fileInp.addEventListener('change', () => {
-            if (fileInp.files.length) btnFile.textContent = "✅ " + fileInp.files[0].name;
-        });
+        if (dropZone) {
+            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.querySelector('.upload-btn').classList.add('drag-active'); });
+            dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.querySelector('.upload-btn').classList.remove('drag-active'); });
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.querySelector('.upload-btn').classList.remove('drag-active');
+                if (e.dataTransfer.files.length) {
+                    fileInp.files = e.dataTransfer.files;
+                    btnFile.textContent = "✅ " + fileInp.files[0].name;
+                }
+            });
+            fileInp.addEventListener('change', () => {
+                if (fileInp.files.length) btnFile.textContent = "✅ " + fileInp.files[0].name;
+            });
+        }
 
         // Init
         fetchProducts();
 
-                    </script>
+    </script>
 </body>
 
 </html>
