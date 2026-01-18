@@ -201,11 +201,47 @@ app.post('/api/orders', async (req, res) => {
     await connectDB();
     try {
         const { customer, items, total, paymentMethod, paymentRef } = req.body;
-        const newOrder = new Order({ customer, items, total, paymentMethod, paymentRef });
+
+        // Handle legacy string customer or new object
+        const customerData = typeof customer === 'string' ? { name: customer } : customer;
+
+        const newOrder = new Order({
+            customer: customerData,
+            items,
+            total,
+            paymentMethod,
+            paymentRef,
+            status: 'pending'
+        });
         await newOrder.save();
         res.status(201).json({ success: true, orderId: newOrder._id });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ error: 'Error saving order' });
+    }
+});
+
+app.put('/api/orders/:id', requireAuth, async (req, res) => {
+    await connectDB();
+    try {
+        const { id } = req.params;
+        const updatedOrder = await Order.findByIdAndUpdate(id, req.body, { new: true });
+        if (!updatedOrder) return res.status(404).json({ error: 'Order not found' });
+        res.json({ success: true, order: updatedOrder });
+    } catch (err) {
+        res.status(500).json({ error: 'Error updating order' });
+    }
+});
+
+app.delete('/api/orders/:id', requireAuth, async (req, res) => {
+    await connectDB();
+    try {
+        const { id } = req.params;
+        const result = await Order.findByIdAndDelete(id);
+        if (!result) return res.status(404).json({ error: 'Order not found' });
+        res.json({ success: true, message: 'Deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ error: 'Error deleting order' });
     }
 });
 

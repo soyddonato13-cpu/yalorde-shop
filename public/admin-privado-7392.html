@@ -359,21 +359,34 @@
 
         <!-- ORDERS VIEW -->
         <div id="view-orders" class="view-section">
-            <div class="header">
-                <div class="page-title">Pedidos Recientes</div>
-                <button class="logout-btn" onclick="fetchOrders()"><i class="fa-solid fa-rotate"></i>
-                    Actualizar</button>
+            <div class="header" style="flex-wrap: wrap; gap: 10px;">
+                <div class="page-title">Gestión de Pedidos</div>
+                <div style="display:flex; gap:10px; flex-grow: 1; justify-content: flex-end;">
+                    <input type="text" id="order-search" placeholder="🔍 Buscar nombre, ref..." onkeyup="filterOrders()"
+                        style="padding: 10px; border: 1px solid #ddd; border-radius: 8px; width: 200px;">
+                    <select id="order-filter-status" onchange="filterOrders()"
+                        style="padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                        <option value="all">Todos los Estados</option>
+                        <option value="pending">🟡 Pendientes</option>
+                        <option value="approved">🟢 Aprobados</option>
+                        <option value="shipped">🚚 Enviados</option>
+                        <option value="delivered">✅ Entregados</option>
+                        <option value="cancelled">❌ Cancelados</option>
+                    </select>
+                    <button class="logout-btn" onclick="fetchOrders()"><i class="fa-solid fa-rotate"></i></button>
+                </div>
             </div>
+
             <div class="card" style="overflow-x:auto;">
                 <table id="orders-table">
                     <thead>
                         <tr>
-                            <th>Fecha</th>
-                            <th>Cliente</th>
+                            <th onclick="sortOrders('date')" style="cursor:pointer">Fecha ↕</th>
+                            <th onclick="sortOrders('customer')" style="cursor:pointer">Cliente ↕</th>
+                            <th>Estado</th>
                             <th>Total</th>
                             <th>Pago</th>
-                            <th>Ref</th>
-                            <th>Items</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="orders-list">
@@ -383,16 +396,214 @@
             </div>
         </div>
 
+        <!-- ORDER EDIT MODAL -->
+        <div id="order-modal" class="modal"
+            style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+            <div class="card" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                <h3 style="margin-top:0;">Detalle de Pedido</h3>
+                <div id="order-modal-content"></div>
+                <div style="margin-top: 20px; text-align: right;">
+                    <button type="button" class="btn-cancel"
+                        onclick="document.getElementById('order-modal').style.display='none'">Cerrar</button>
+                    <button type="button" class="submit-btn" id="save-order-btn">Guardar Cambios</button>
+                </div>
+            </div>
+        </div>
+
         <!-- CMS VIEW (Personalizar) -->
         <div id="view-cms" class="view-section">
             <div class="header">
                 <div class="page-title">Personalizar Tienda</div>
             </div>
-
+            <!-- ... CMS content ... -->
             <div class="card">
                 <h3>🎨 Apariencia</h3>
                 <form id="cms-form">
-                    <div class="form-grid">
+                    <!-- ... inputs ... -->
+                    <!-- Replacing up to CMS fetch function start -->
+
+                    <!-- SCRIPT LOGIC REPLACEMENT BELOW -->
+                    <script>
+                        let allProducts = [];
+                        let allOrders = []; // Store orders globally for filtering
+
+                        // ... (Navigation and Product logic remains) ...
+                        // ... (Place this AFTER deleteProduct function) ...
+
+                        // --- ORDERS LOGIC 2.0 ---
+                        async function fetchOrders() {
+                            try {
+                                const res = await fetch('/api/orders');
+                                allOrders = await res.json();
+                                renderOrders(allOrders);
+                            } catch (e) { Toast.error("Error cargando pedidos"); }
+                        }
+
+                        function renderOrders(orders) {
+                            const tbody = document.getElementById('orders-list');
+                            if (orders.length === 0) {
+                                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">No hay pedidos encontrados.</td></tr>';
+                                return;
+                            }
+
+                            const statusColors = {
+                                'pending': '#f1c40f', 'approved': '#2ecc71', 'shipped': '#3498db',
+                                'delivered': '#9b59b6', 'cancelled': '#e74c3c'
+                            };
+                            const statusLabels = {
+                                'pending': 'Pendiente', 'approved': 'Aprobado', 'shipped': 'Enviado',
+                                'delivered': 'Entregado', 'cancelled': 'Cancelado'
+                            };
+
+                            tbody.innerHTML = orders.map(o => {
+                                // Compatibility check for old string customers
+                                const custName = typeof o.customer === 'object' ? o.customer.name : o.customer;
+
+                                return `
+                <tr>
+                    <td>${new Date(o.date).toLocaleDateString()} ${new Date(o.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                    <td>
+                        <strong>${custName}</strong><br>
+                        <small style="color:#666">${o.paymentRef}</small>
+                    </td>
+                    <td><span style="background:${statusColors[o.status] || '#ccc'}; color:white; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem;">
+                        ${statusLabels[o.status] || o.status}
+                    </span></td>
+                    <td style="font-weight:bold;">$${o.total.toFixed(2)}</td>
+                    <td>${o.paymentMethod}</td>
+                    <td>
+                        <button class="btn-action btn-edit" onclick='openOrderModal("${o._id}")'><i class="fa-solid fa-eye"></i></button>
+                        <button class="btn-action btn-delete" onclick="deleteOrder('${o._id}')"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `}).join('');
+                        }
+
+                        function filterOrders() {
+                            const term = document.getElementById('order-search').value.toLowerCase();
+                            const status = document.getElementById('order-filter-status').value;
+
+                            const filtered = allOrders.filter(o => {
+                                const custName = typeof o.customer === 'object' ? o.customer.name : o.customer;
+                                const matchesTerm = custName.toLowerCase().includes(term) ||
+                                    o.paymentRef.toLowerCase().includes(term) ||
+                                    o._id.toLowerCase().includes(term);
+                                const matchesStatus = status === 'all' || o.status === status;
+                                return matchesTerm && matchesStatus;
+                            });
+                            renderOrders(filtered);
+                        }
+
+                        let sortDesc = true;
+                        function sortOrders(field) {
+                            sortDesc = !sortDesc;
+                            allOrders.sort((a, b) => {
+                                let valA = field === 'customer' ? (typeof a.customer === 'object' ? a.customer.name : a.customer) : a[field];
+                                let valB = field === 'customer' ? (typeof b.customer === 'object' ? b.customer.name : b.customer) : b[field];
+
+                                if (valA < valB) return sortDesc ? 1 : -1;
+                                if (valA > valB) return sortDesc ? -1 : 1;
+                                return 0;
+                            });
+                            renderOrders(allOrders);
+                        }
+
+                        function openOrderModal(id) {
+                            const order = allOrders.find(o => o._id === id);
+                            if (!order) return;
+
+                            const cust = typeof order.customer === 'object' ? order.customer : { name: order.customer }; // Compat
+
+                            const html = `
+                <div class="form-grid">
+                    <div>
+                        <label>Estado del Pedido</label>
+                        <select id="edit-order-status" style="width:100%; padding:8px;">
+                            <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pendiente</option>
+                            <option value="approved" ${order.status === 'approved' ? 'selected' : ''}>Aprobado (Pago Verificado)</option>
+                            <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Enviado</option>
+                            <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Entregado</option>
+                            <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelado</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Tracking / Guía</label>
+                        <input type="text" id="edit-order-tracking" value="${order.trackingCode || ''}" placeholder="Número de guía...">
+                    </div>
+                </div>
+
+                <h4>📦 Items</h4>
+                <ul style="list-style:none; padding:0; background:#f9f9f9; padding:10px; border-radius:8px;">
+                    ${order.items.map(i => `
+                        <li style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:5px 0;">
+                            <span>${i.qty}x ${i.title} (${i.size})</span>
+                            <span>$${(i.price * i.qty).toFixed(2)}</span>
+                        </li>
+                    `).join('')}
+                    <li style="display:flex; justify-content:space-between; font-weight:bold; margin-top:5px;">
+                        <span>TOTAL</span>
+                        <span>$${order.total.toFixed(2)}</span>
+                    </li>
+                </ul>
+
+                <h4>👤 Datos del Cliente</h4>
+                <p><strong>Nombre:</strong> ${cust.name}</p>
+                <p><strong>Cédula:</strong> ${cust.docId || '-'}</p>
+                <p><strong>Teléfono:</strong> ${cust.phone || '-'}</p>
+                <p><strong>Email:</strong> ${cust.email || '-'}</p>
+                <div style="background:#fff3cd; padding:10px; border-radius:5px; margin-top:5px;">
+                    <strong>📍 Dirección:</strong><br>
+                    ${cust.address || '-'}
+                </div>
+
+                <div style="margin-top:20px;">
+                    <label>Notas Internas</label>
+                    <textarea id="edit-order-notes" rows="3" style="width:100%;" placeholder="Notas solo para admin...">${order.notes || ''}</textarea>
+                </div>
+            `;
+
+                            document.getElementById('order-modal-content').innerHTML = html;
+                            document.getElementById('order-modal').style.display = 'flex';
+
+                            // Set save handler
+                            document.getElementById('save-order-btn').onclick = () => updateOrder(id);
+                        }
+
+                        async function updateOrder(id) {
+                            const status = document.getElementById('edit-order-status').value;
+                            const tracking = document.getElementById('edit-order-tracking').value;
+                            const notes = document.getElementById('edit-order-notes').value;
+
+                            try {
+                                const res = await fetch(`/api/orders/${id}`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ status, trackingCode: tracking, notes })
+                                });
+
+                                if (res.ok) {
+                                    Toast.success("Pedido actualizado");
+                                    document.getElementById('order-modal').style.display = 'none';
+                                    fetchOrders();
+                                } else {
+                                    Toast.error("Error al actualizar");
+                                }
+                            } catch (e) { Toast.error("Error de conexión"); }
+                        }
+
+                        async function deleteOrder(id) {
+                            if (!confirm("¿ESTÁS SEGURO? Esta acción no se puede deshacer.")) return;
+                            try {
+                                const res = await fetch(`/api/orders/${id}`, { method: 'DELETE' });
+                                if (res.ok) {
+                                    Toast.success("Pedido eliminado permanentemente");
+                                    fetchOrders();
+                                } else Toast.error("Error al eliminar");
+                            } catch (e) { Toast.error("Error de conexión"); }
+                        }
+
+                        // --- CMS LOGIC ---
+                        async function fetchCMS() {
                         <div>
                             <label>Color Principal (Botones, Iconos)</label>
                             <input type="color" name="themeColor" id="cms-color" value="#e84393">
@@ -402,7 +613,7 @@
                             <input type="text" name="infoBar" id="cms-infobar"
                                 placeholder="Ej: Envío Gratis a toda Venezuela 🇻🇪">
                         </div>
-                    </div>
+                    </div >
 
                     <div class="form-grid">
                         <div>
@@ -427,160 +638,160 @@
                     <button type="submit" class="submit-btn">Guardar Cambios</button>
                 </form>
             </div>
-        </div>
+        </div >
 
-    </div>
+    </div >
 
-    <!-- MAIN SCRIPT -->
-    <script>
-        let allProducts = [];
+                                <!-- MAIN SCRIPT -->
+                                <script>
+                                    let allProducts = [];
 
-        // --- NAVIGATION ---
-        function switchTab(tabName) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                                    // --- NAVIGATION ---
+                                    function switchTab(tabName) {
+                                        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
 
-            document.getElementById(`view-${tabName}`).classList.add('active');
+                                    document.getElementById(`view-${tabName}`).classList.add('active');
 
-            // Highlight Menu
-            const icons = { 'inventory': 0, 'orders': 1, 'cms': 2 };
-            document.querySelectorAll('.nav-item')[icons[tabName]].classList.add('active');
+                                    // Highlight Menu
+                                    const icons = {'inventory': 0, 'orders': 1, 'cms': 2 };
+                                    document.querySelectorAll('.nav-item')[icons[tabName]].classList.add('active');
 
-            if (tabName === 'inventory') fetchProducts();
-            if (tabName === 'orders') fetchOrders();
-            if (tabName === 'cms') fetchCMS();
+                                    if (tabName === 'inventory') fetchProducts();
+                                    if (tabName === 'orders') fetchOrders();
+                                    if (tabName === 'cms') fetchCMS();
         }
 
-        // --- INVENTORY LOGIC ---
-        async function fetchProducts() {
+                                    // --- INVENTORY LOGIC ---
+                                    async function fetchProducts() {
             try {
                 const res = await fetch('/api/products');
-                allProducts = await res.json();
-                renderInventory(allProducts);
-            } catch (e) { console.error(e); Toast.error('Error cargando productos'); }
+                                    allProducts = await res.json();
+                                    renderInventory(allProducts);
+            } catch (e) {console.error(e); Toast.error('Error cargando productos'); }
         }
 
-        function renderInventory(products) {
+                                    function renderInventory(products) {
             const list = document.getElementById('inv-list');
             const sorted = products.sort((a, b) => a.isTrending ? -1 : 1); // Trending first
 
             list.innerHTML = sorted.map(p => `
-                <div class="inv-item">
-                    <div class="inv-info">
-                        <img src="${p.img}" class="inv-img">
-                        <div>
-                            <div style="font-weight:600;">${p.title} ${p.isTrending ? '🔥' : ''}</div>
-                            <div style="font-size:0.8rem; color:#888;">$${p.price.toFixed(2)} | Stock: ${Object.values(p.sizes).reduce((a, b) => a + (b.stock || 0), 0)}</div>
-                        </div>
-                    </div>
-                     <div>
-                        <button class="btn-action btn-edit" onclick="editProduct('${p.id}')"><i class="fa-solid fa-pen"></i></button>
-                        <button class="btn-action btn-delete" onclick="deleteProduct('${p.id}')"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                </div>
-            `).join('');
+                                    <div class="inv-item">
+                                        <div class="inv-info">
+                                            <img src="${p.img}" class="inv-img">
+                                                <div>
+                                                    <div style="font-weight:600;">${p.title} ${p.isTrending ? '🔥' : ''}</div>
+                                                    <div style="font-size:0.8rem; color:#888;">$${p.price.toFixed(2)} | Stock: ${Object.values(p.sizes).reduce((a, b) => a + (b.stock || 0), 0)}</div>
+                                                </div>
+                                        </div>
+                                        <div>
+                                            <button class="btn-action btn-edit" onclick="editProduct('${p.id}')"><i class="fa-solid fa-pen"></i></button>
+                                            <button class="btn-action btn-delete" onclick="deleteProduct('${p.id}')"><i class="fa-solid fa-trash"></i></button>
+                                        </div>
+                                    </div>
+                                    `).join('');
         }
 
-        // Edit Product (Populate Form)
-        function editProduct(id) {
+                                    // Edit Product (Populate Form)
+                                    function editProduct(id) {
             const p = allProducts.find(prod => String(prod.id) === String(id));
-            if (!p) return;
+                                    if (!p) return;
 
-            document.getElementById('edit-id').value = p.id;
-            document.getElementById('inp-title').value = p.title;
-            document.getElementById('inp-category').value = p.category;
-            document.getElementById('inp-price').value = p.price;
-            document.getElementById('inp-desc').value = p.description;
-            document.getElementById('inp-trending').checked = !!p.isTrending;
+                                    document.getElementById('edit-id').value = p.id;
+                                    document.getElementById('inp-title').value = p.title;
+                                    document.getElementById('inp-category').value = p.category;
+                                    document.getElementById('inp-price').value = p.price;
+                                    document.getElementById('inp-desc').value = p.description;
+                                    document.getElementById('inp-trending').checked = !!p.isTrending;
 
-            document.getElementById('qty-s').value = p.sizes.S ? p.sizes.S.stock : 0;
-            document.getElementById('qty-m').value = p.sizes.M ? p.sizes.M.stock : 0;
-            document.getElementById('qty-l').value = p.sizes.L ? p.sizes.L.stock : 0;
+                                    document.getElementById('qty-s').value = p.sizes.S ? p.sizes.S.stock : 0;
+                                    document.getElementById('qty-m').value = p.sizes.M ? p.sizes.M.stock : 0;
+                                    document.getElementById('qty-l').value = p.sizes.L ? p.sizes.L.stock : 0;
 
-            // UI Changes
-            document.getElementById('form-header-title').textContent = "Editar Producto";
-            document.getElementById('save-btn').textContent = "Actualizar";
-            document.getElementById('cancel-btn').style.display = 'block';
-            document.getElementById('current-img-msg').style.display = 'block';
+                                    // UI Changes
+                                    document.getElementById('form-header-title').textContent = "Editar Producto";
+                                    document.getElementById('save-btn').textContent = "Actualizar";
+                                    document.getElementById('cancel-btn').style.display = 'block';
+                                    document.getElementById('current-img-msg').style.display = 'block';
 
-            document.querySelector('.main-content').scrollTop = 0;
+                                    document.querySelector('.main-content').scrollTop = 0;
         }
 
-        function resetForm() {
-            document.getElementById('product-form').reset();
-            document.getElementById('edit-id').value = "";
-            document.getElementById('form-header-title').textContent = "Agregar Nuevo Producto";
-            document.getElementById('save-btn').textContent = "Guardar Producto";
-            document.getElementById('cancel-btn').style.display = 'none';
-            document.getElementById('current-img-msg').style.display = 'none';
+                                    function resetForm() {
+                                        document.getElementById('product-form').reset();
+                                    document.getElementById('edit-id').value = "";
+                                    document.getElementById('form-header-title').textContent = "Agregar Nuevo Producto";
+                                    document.getElementById('save-btn').textContent = "Guardar Producto";
+                                    document.getElementById('cancel-btn').style.display = 'none';
+                                    document.getElementById('current-img-msg').style.display = 'none';
         }
 
         // Submit Product
         document.getElementById('product-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('save-btn');
-            btn.textContent = "Guardando...";
-            btn.disabled = true;
+                                        e.preventDefault();
+                                    const btn = document.getElementById('save-btn');
+                                    btn.textContent = "Guardando...";
+                                    btn.disabled = true;
 
-            const formData = new FormData(e.target);
-            const sizes = {
-                "S": { stock: parseInt(document.getElementById('qty-s').value) || 0 },
-                "M": { stock: parseInt(document.getElementById('qty-m').value) || 0 },
-                "L": { stock: parseInt(document.getElementById('qty-l').value) || 0 }
+                                    const formData = new FormData(e.target);
+                                    const sizes = {
+                                        "S": {stock: parseInt(document.getElementById('qty-s').value) || 0 },
+                                    "M": {stock: parseInt(document.getElementById('qty-m').value) || 0 },
+                                    "L": {stock: parseInt(document.getElementById('qty-l').value) || 0 }
             };
-            formData.append('sizes', JSON.stringify(sizes));
-            formData.append('isTrending', document.getElementById('inp-trending').checked);
-            const editId = document.getElementById('edit-id').value;
+                                    formData.append('sizes', JSON.stringify(sizes));
+                                    formData.append('isTrending', document.getElementById('inp-trending').checked);
+                                    const editId = document.getElementById('edit-id').value;
 
-            try {
+                                    try {
                 const url = editId ? `/api/products/${editId}` : '/api/products';
-                const method = editId ? 'PUT' : 'POST';
+                                    const method = editId ? 'PUT' : 'POST';
 
-                const res = await fetch(url, { method, body: formData });
-                if (res.ok) {
-                    Toast.success("Producto guardado exitosamente");
-                    resetForm();
-                    fetchProducts();
+                                    const res = await fetch(url, {method, body: formData });
+                                    if (res.ok) {
+                                        Toast.success("Producto guardado exitosamente");
+                                    resetForm();
+                                    fetchProducts();
                 } else {
-                    Toast.error("Error al guardar");
+                                        Toast.error("Error al guardar");
                 }
-            } catch (err) { Toast.error("Error de conexión"); }
-            finally { btn.textContent = editId ? "Actualizar" : "Guardar Producto"; btn.disabled = false; }
+            } catch (err) {Toast.error("Error de conexión"); }
+                                    finally {btn.textContent = editId ? "Actualizar" : "Guardar Producto"; btn.disabled = false; }
         });
 
-        async function deleteProduct(id) {
-            console.log("Deleting ID:", id); // Debug
-            if (!confirm("¿ESTÁS SEGURO? Se borrará para siempre.")) return;
-            try {
-                const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
-                if (res.ok) { Toast.success("Producto eliminado"); fetchProducts(); }
-                else Toast.error("Error al eliminar");
-            } catch (e) { Toast.error("Error de conexión"); }
+                                    async function deleteProduct(id) {
+                                        console.log("Deleting ID:", id); // Debug
+                                    if (!confirm("¿ESTÁS SEGURO? Se borrará para siempre.")) return;
+                                    try {
+                const res = await fetch(`/api/products/${id}`, {method: 'DELETE' });
+                                    if (res.ok) {Toast.success("Producto eliminado"); fetchProducts(); }
+                                    else Toast.error("Error al eliminar");
+            } catch (e) {Toast.error("Error de conexión"); }
         }
 
-        // --- ORDERS LOGIC ---
-        async function fetchOrders() {
+                                    // --- ORDERS LOGIC ---
+                                    async function fetchOrders() {
             try {
                 const res = await fetch('/api/orders');
-                const orders = await res.json();
-                const tbody = document.getElementById('orders-list');
+                                    const orders = await res.json();
+                                    const tbody = document.getElementById('orders-list');
 
-                if (orders.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">No hay pedidos aún.</td></tr>';
-                    return;
+                                    if (orders.length === 0) {
+                                        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">No hay pedidos aún.</td></tr>';
+                                    return;
                 }
 
                 tbody.innerHTML = orders.map(o => `
-                    <tr>
-                        <td>${new Date(o.date).toLocaleDateString()}</td>
-                        <td>${o.customer}</td>
-                        <td style="font-weight:bold;">$${o.total.toFixed(2)}</td>
-                        <td>${o.paymentMethod}</td>
-                        <td><span style="font-family:monospace; background:#eee; padding:2px 5px; border-radius:4px;">${o.paymentRef}</span></td>
-                        <td>
-                            ${o.items.map(i => `<div style="font-size:0.8rem;">${i.qty}x ${i.title} (${i.size})</div>`).join('')}
-                        </td>
-                    </tr>
+                                    <tr>
+                                        <td>${new Date(o.date).toLocaleDateString()}</td>
+                                        <td>${o.customer}</td>
+                                        <td style="font-weight:bold;">$${o.total.toFixed(2)}</td>
+                                        <td>${o.paymentMethod}</td>
+                                        <td><span style="font-family:monospace; background:#eee; padding:2px 5px; border-radius:4px;">${o.paymentRef}</span></td>
+                                        <td>
+                                            ${o.items.map(i => `<div style="font-size:0.8rem;">${i.qty}x ${i.title} (${i.size})</div>`).join('')}
+                                        </td>
+                                    </tr>
                 `).join('');
             } catch (e) { Toast.error("Error cargando pedidos"); }
         }
@@ -638,7 +849,7 @@
         // Init
         fetchProducts();
 
-    </script>
+                    </script>
 </body>
 
 </html>

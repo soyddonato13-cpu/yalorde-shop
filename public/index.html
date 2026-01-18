@@ -261,19 +261,38 @@
             <div id="checkout-step-1">
                 <div class="form-group">
                     <label>Nombre Completo</label>
-                    <input type="text" id="cust-name" placeholder="Tu nombre">
+                    <input type="text" id="cust-name" placeholder="Tu nombre" required>
                 </div>
                 <div class="form-group">
-                    <label>WhatsApp</label>
-                    <input type="tel" id="cust-phone" placeholder="0414-XXXXXXX">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label>Cédula / RIF</label>
+                            <input type="text" id="cust-doc" placeholder="V-12345678">
+                        </div>
+                        <div>
+                            <label>WhatsApp</label>
+                            <input type="tel" id="cust-phone" placeholder="0414-XXXXXXX" required>
+                        </div>
+                    </div>
                 </div>
+                <div class="form-group">
+                    <label>Correo Electrónico (Opcional)</label>
+                    <input type="email" id="cust-email" placeholder="para recibir tu recibo">
+                </div>
+
                 <div class="form-group">
                     <label>Método de Entrega</label>
-                    <select id="cust-delivery">
+                    <select id="cust-delivery" onchange="toggleAddressField()">
                         <option value="pickup">Retiro en Tienda (Gratis)</option>
                         <option value="mrw">Envío Nacional (MRW/Zoom - Cobro Destino)</option>
                         <option value="delivery">Delivery Maracay ($3)</option>
                     </select>
+                </div>
+
+                <div class="form-group" id="address-group" style="display:none;">
+                    <label>Dirección de Envío / Agencia</label>
+                    <textarea id="cust-address" rows="2"
+                        placeholder="Estado, Ciudad, Municipio, Dirección Exacta o Agencia de Encomienda"></textarea>
                 </div>
                 <button class="step-btn" onclick="goToPayment()">CONTINUAR A PAGO</button>
             </div>

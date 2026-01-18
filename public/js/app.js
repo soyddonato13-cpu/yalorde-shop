@@ -278,9 +278,29 @@ function closeCheckout() {
     document.getElementById('checkout-modal').classList.remove('active');
 }
 
+function toggleAddressField() {
+    const method = document.getElementById('cust-delivery').value;
+    const addrGroup = document.getElementById('address-group');
+    if (method === 'mrw' || method === 'delivery') {
+        addrGroup.style.display = 'block';
+    } else {
+        addrGroup.style.display = 'none';
+        document.getElementById('cust-address').value = '';
+    }
+}
+
 function goToPayment() {
     const name = document.getElementById('cust-name').value;
-    if (!name) { Toast.error("Por favor ingresa tu nombre"); return; }
+    const phone = document.getElementById('cust-phone').value;
+    const method = document.getElementById('cust-delivery').value;
+    const address = document.getElementById('cust-address').value;
+
+    if (!name) { Toast.error("El nombre es requerido"); return; }
+    if (!phone) { Toast.error("El teléfono es requerido"); return; }
+
+    if ((method === 'mrw' || method === 'delivery') && !address) {
+        Toast.error("Por favor ingresa la dirección de envío"); return;
+    }
 
     document.getElementById('checkout-step-1').style.display = 'none';
     document.getElementById('checkout-step-2').style.display = 'block';
@@ -304,11 +324,11 @@ function selectPayment(method, el) {
             Banesco (0134)<br>
             Telf: 0414-6756068<br>
             CI: 19.503.236<br>
-            Monto: Bs. ${(Cart.total() * 60).toFixed(2)} (Tasa BCV)
+            Monto: Bs. ${(Cart.total() * 60).toFixed(2)} (Ref Tasa)
         `;
     } else if (method === 'binance') {
         infoBox.innerHTML = `
-            <strong>Binance Pay ID:</strong> 123456789<br>
+            <strong>Binance Pay ID:</strong> 423456789<br>
             <strong>Email:</strong> pagos@yalorde.com<br>
             <div style="text-align:center; margin-top:10px;"><i class="fa-solid fa-qrcode" style="font-size:30px;"></i></div>
         `;
@@ -322,17 +342,35 @@ function selectPayment(method, el) {
 }
 
 async function submitOrder() {
+    // Collect Data
     const name = document.getElementById('cust-name').value;
-    if (!name) { Toast.error("Por favor ingresa tu nombre"); return; }
+    const phone = document.getElementById('cust-phone').value;
+    const docId = document.getElementById('cust-doc').value;
+    const email = document.getElementById('cust-email').value;
+    const deliveryMethod = document.getElementById('cust-delivery').value;
+    const address = document.getElementById('cust-address').value;
+
+    const paymentOption = document.querySelector('.pay-option.selected');
+    if (!paymentOption) { Toast.error("Selecciona un método de pago"); return; }
 
     const ref = document.getElementById('pay-ref').value;
-    if (!ref) { Toast.error("Por favor ingresa la referencia de pago"); return; }
+    if (!ref) { Toast.error("Ingresa la referencia de pago"); return; }
 
-    const paymentMethod = document.querySelector('.pay-option.selected').getAttribute('onclick').includes('pago_movil') ? 'pago_movil' :
-        (document.querySelector('.pay-option.selected').getAttribute('onclick').includes('binance') ? 'binance' : 'zelle');
+    // Derive method string from onclick attribute or data attribute 
+    // (Simplification: Checking text content or id would be better but let's stick to previous pattern logic or cleaner)
+    let paymentMethod = 'Unknown';
+    if (paymentOption.innerHTML.includes('Pago Móvil')) paymentMethod = 'pago_movil';
+    else if (paymentOption.innerHTML.includes('Binance')) paymentMethod = 'binance';
+    else if (paymentOption.innerHTML.includes('Zelle')) paymentMethod = 'zelle';
 
     const orderData = {
-        customer: name,
+        customer: {
+            name,
+            phone,
+            docId,
+            email,
+            address: `[${deliveryMethod.toUpperCase()}] ${address}`
+        },
         items: Cart.items,
         total: Cart.total(),
         paymentMethod: paymentMethod,
