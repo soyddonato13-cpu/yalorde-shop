@@ -4,6 +4,7 @@ const contentSchema = new mongoose.Schema({
     heroTitle: String,
     heroSubtitle: String,
     heroImg: String,
+    backgroundImage: String, // New field for custom background
     infoBar: String,
     themeColor: { type: String, default: '#e84393' }, // Default Pink
     whatsapp: String,

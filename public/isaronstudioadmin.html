@@ -337,7 +337,66 @@
                     <div class="page-title">Inventario de Productos</div>
                 </div>
 
-                <!-- Product Form Removed for Owner -->
+                <div class="card">
+                    <h3 style="margin-top:0; margin-bottom:20px;" id="form-header-title">Agregar Nuevo Producto</h3>
+                    <form id="product-form">
+                        <input type="hidden" id="edit-id" value="">
+
+                        <div class="form-grid">
+                            <input type="text" name="title" id="inp-title" placeholder="Nombre del Producto" required>
+                            <select name="category" id="inp-category" required>
+                                <option value="" disabled selected>Categoría</option>
+                                <option value="vestidos">Vestidos</option>
+                                <option value="tops">Blusas & Tops</option>
+                                <option value="bottoms">Pantalones</option>
+                                <option value="calzado">Calzado</option>
+                            </select>
+                        </div>
+
+                        <div class="form-grid">
+                            <input type="number" name="price" id="inp-price" placeholder="Precio ($)" step="0.01"
+                                required>
+                            <input type="text" id="inp-desc" name="description" placeholder="Descripción Breve"
+                                required>
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="font-size:0.9rem; color:#666; display:block; margin-bottom:10px;">Stock por
+                                Talla</label>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                                <input type="number" id="qty-s" placeholder="S" min="0">
+                                <input type="number" id="qty-m" placeholder="M" min="0">
+                                <input type="number" id="qty-l" placeholder="L" min="0">
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 20px;">
+                            <div style="display:flex; align-items:center; gap:5px;">
+                                <input type="checkbox" name="isTrending" id="inp-trending" style="width: auto;">
+                                <label for="inp-trending">🔥 Tendencia</label>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:5px;">
+                                <input type="checkbox" name="isOffer" id="inp-offer" style="width: auto;">
+                                <label for="inp-offer">🏷️ En Oferta</label>
+                            </div>
+                        </div>
+
+                        <div class="upload-wrapper" id="drop-zone">
+                            <button type="button" class="upload-btn btn-file">📸 Subir Imagen del Producto</button>
+                            <input type="file" name="image" id="file-input" accept="image/*">
+                        </div>
+                        <small id="current-img-msg"
+                            style="display:none; color:#666; margin-bottom:15px; display:block;">(Deja vacío para
+                            mantener
+                            la imagen actual)</small>
+
+                        <div style="display:flex; gap:10px; margin-top:20px;">
+                            <button type="submit" class="submit-btn" id="save-btn">Guardar Producto</button>
+                            <button type="button" class="submit-btn" id="cancel-btn"
+                                style="background:#ccc; display:none;" onclick="resetForm()">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
 
                 <div class="card">
                     <h3 id="inv-list-title">Lista de Productos</h3>
@@ -433,6 +492,24 @@
                                 <label>Subtítulo</label>
                                 <input type="text" name="heroSubtitle" id="cms-hero-sub"
                                     placeholder="Ej: Brilla con luz propia">
+                            </div>
+                        </div>
+
+                        <h3>🖼️ Imágenes de Fondo</h3>
+                        <div class="form-grid">
+                            <div>
+                                <label>Fondo de Pantalla (se difuminará automáticamente)</label>
+                                <input type="file" id="cms-bg-upload" accept="image/*"
+                                    style="padding:10px; border:1px solid #ddd; border-radius:8px;">
+                                <small style="display:block; color:#666; margin-top:5px;">La imagen se aplicará con
+                                    efecto blur automático</small>
+                            </div>
+                            <div>
+                                <label>Imagen Hero Banner (imagen grande superior)</label>
+                                <input type="file" id="cms-hero-upload" accept="image/*"
+                                    style="padding:10px; border:1px solid #ddd; border-radius:8px;">
+                                <small style="display:block; color:#666; margin-top:5px;">Imagen principal del banner de
+                                    inicio</small>
                             </div>
                         </div>
 
@@ -573,7 +650,11 @@
                         <div class="inv-info">
                             <img src="${p.img || 'https://via.placeholder.com/50'}" class="inv-img">
                             <div>
-                                <div style="font-weight:600;">${p.title} ${p.isTrending ? '🔥' : ''}</div>
+                                <div style="font-weight:600;">
+                                    ${p.title} 
+                                    ${p.isTrending ? '🔥' : ''}
+                                    ${p.isOffer ? '<span style="font-size:0.8em; background:#ffeaa7; padding:2px 5px; border-radius:4px;">🏷️</span>' : ''}
+                                </div>
                                 <div style="font-size:0.8rem; color:#888;">
                                     $${(p.price || 0).toFixed(2)} | 
                                     <span style="${isLowStock ? 'color:#ff4757; font-weight:bold;' : ''}">Stock: ${totalStock}</span>
@@ -581,14 +662,92 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Edit/Delete Removed for Owner -->
+                        <div style="${adminRole === 'owner' ? 'display:none;' : ''}">
+                            <button class="btn-action btn-edit" onclick="editProduct('${p.id}')"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn-action btn-delete" onclick="deleteProduct('${p.id}')"><i class="fa-solid fa-trash"></i></button>
+                        </div>
                     </div>
                 `;
                 }).join('');
             }
 
             // Edit Product (Populate Form)
-            // Product Management Functions Removed for Owner
+            function editProduct(id) {
+                const p = allProducts.find(prod => String(prod.id) === String(id));
+                if (!p) return;
+
+                document.getElementById('edit-id').value = p.id;
+                document.getElementById('inp-title').value = p.title;
+                document.getElementById('inp-category').value = p.category;
+                document.getElementById('inp-price').value = p.price;
+                document.getElementById('inp-desc').value = p.description;
+                document.getElementById('inp-trending').checked = !!p.isTrending;
+                document.getElementById('inp-offer').checked = !!p.isOffer;
+
+                document.getElementById('qty-s').value = p.sizes.S ? p.sizes.S.stock : 0;
+                document.getElementById('qty-m').value = p.sizes.M ? p.sizes.M.stock : 0;
+                document.getElementById('qty-l').value = p.sizes.L ? p.sizes.L.stock : 0;
+
+                // UI Changes
+                document.getElementById('form-header-title').textContent = "Editar Producto";
+                document.getElementById('save-btn').textContent = "Actualizar";
+                document.getElementById('cancel-btn').style.display = 'block';
+                document.getElementById('current-img-msg').style.display = 'block';
+
+                document.querySelector('.main-content').scrollTop = 0;
+            }
+
+            function resetForm() {
+                document.getElementById('product-form').reset();
+                document.getElementById('edit-id').value = "";
+                document.getElementById('form-header-title').textContent = "Agregar Nuevo Producto";
+                document.getElementById('save-btn').textContent = "Guardar Producto";
+                document.getElementById('cancel-btn').style.display = 'none';
+                document.getElementById('current-img-msg').style.display = 'none';
+            }
+
+            // Submit Product
+            document.getElementById('product-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = document.getElementById('save-btn');
+                btn.textContent = "Guardando...";
+                btn.disabled = true;
+
+                const formData = new FormData(e.target);
+                const sizes = {
+                    "S": { stock: parseInt(document.getElementById('qty-s').value) || 0 },
+                    "M": { stock: parseInt(document.getElementById('qty-m').value) || 0 },
+                    "L": { stock: parseInt(document.getElementById('qty-l').value) || 0 }
+                };
+                formData.append('sizes', JSON.stringify(sizes));
+                formData.append('isTrending', document.getElementById('inp-trending').checked);
+                formData.append('isOffer', document.getElementById('inp-offer').checked);
+                const editId = document.getElementById('edit-id').value;
+
+                try {
+                    const url = editId ? `/api/products/${editId}` : '/api/products';
+                    const method = editId ? 'PUT' : 'POST';
+
+                    const res = await fetch(url, { method, body: formData });
+                    if (res.ok) {
+                        Toast.success("Producto guardado exitosamente");
+                        resetForm();
+                        fetchProducts();
+                    } else {
+                        Toast.error("Error al guardar");
+                    }
+                } catch (err) { Toast.error("Error de conexión"); }
+                finally { btn.textContent = editId ? "Actualizar" : "Guardar Producto"; btn.disabled = false; }
+            });
+
+            async function deleteProduct(id) {
+                if (!confirm("¿ESTÁS SEGURO? Se borrará para siempre.")) return;
+                try {
+                    const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+                    if (res.ok) { Toast.success("Producto eliminado"); fetchProducts(); }
+                    else Toast.error("Error al eliminar");
+                } catch (e) { Toast.error("Error de conexión"); }
+            }
 
             // --- ORDERS LOGIC 2.0 ---
             let lastOrderCount = 0; // Track order count for notifications
@@ -859,21 +1018,66 @@
 
             document.getElementById('cms-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const data = Object.fromEntries(new FormData(e.target));
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData);
+
+                // Helper to convert file to Base64
+                const toBase64 = file => new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = error => reject(error);
+                });
 
                 try {
+                    // Handle Background Image Upload
+                    const bgFile = document.getElementById('cms-bg-upload').files[0];
+                    if (bgFile) {
+                        data.backgroundImage = await toBase64(bgFile);
+                    }
+
+                    // Handle Hero Image Upload
+                    const heroFile = document.getElementById('cms-hero-upload').files[0];
+                    if (heroFile) {
+                        data.heroImg = await toBase64(heroFile);
+                    }
+
+                    Toast.info("Guardando configuración...");
+
                     const res = await fetch('/api/content', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(data)
                     });
+
                     if (res.ok) Toast.success("¡Tienda actualizada! Recarga para ver cambios.");
                     else Toast.error("Error guardando cambios");
-                } catch (e) { Toast.error("Error de conexión"); }
+                } catch (e) {
+                    console.error(e);
+                    Toast.error("Error al procesar imágenes o conexión");
+                }
             });
 
             // --- UPLOAD DRAG & DROP ---
-            // Drag & Drop Removed for Owner
+            const dropZone = document.getElementById('drop-zone');
+            const fileInp = document.getElementById('file-input');
+            const btnFile = document.querySelector('.btn-file');
+
+            if (dropZone) {
+                dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.querySelector('.upload-btn').classList.add('drag-active'); });
+                dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.querySelector('.upload-btn').classList.remove('drag-active'); });
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropZone.querySelector('.upload-btn').classList.remove('drag-active');
+                    if (e.dataTransfer.files.length) {
+                        fileInp.files = e.dataTransfer.files;
+                        btnFile.textContent = "✅ " + fileInp.files[0].name;
+                    }
+                });
+                fileInp.addEventListener('change', () => {
+                    if (fileInp.files.length) btnFile.textContent = "✅ " + fileInp.files[0].name;
+                });
+            }
 
             // Initialize Admin Panel
             window.addEventListener('load', () => {

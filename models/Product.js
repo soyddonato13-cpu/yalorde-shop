@@ -5,7 +5,8 @@ const productSchema = new mongoose.Schema({
     title: { type: String, required: true },
     category: { type: String, required: true },
     price: { type: Number, required: true },
-    img: { type: String, required: true },
+    img: { type: String, required: true }, // Main image (first image) - kept for backward compatibility
+    images: [{ type: String }], // Array of image URLs from Cloudinary
     description: { type: String, required: true },
     sizes: {
         S: { stock: { type: Number, default: 0 } },

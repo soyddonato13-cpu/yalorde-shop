@@ -46,7 +46,14 @@
             <li onclick="filterCategory('tops'); toggleMenu()">Blusas & Tops</li>
             <li onclick="filterCategory('bottoms'); toggleMenu()">Pantalones & Jeans</li>
             <li onclick="filterCategory('calzado'); toggleMenu()">Calzado</li>
-
+            <hr style="margin: 10px 0; opacity: 0.1;">
+            <li onclick="openAuthModal(); toggleMenu()"><i class="fa-regular fa-user" style="margin-right:10px;"></i> Mi
+                Cuenta</li>
+            <li onclick="openTrackingModal(); toggleMenu()"><i class="fa-solid fa-truck-fast"
+                    style="margin-right:10px;"></i> Rastrear Pedido</li>
+            <hr style="margin: 10px 0; opacity: 0.1;">
+            <li onclick="window.location.href='acceso-x7z.html'; toggleMenu()" style="color:#999; font-size:0.9em;"><i
+                    class="fa-solid fa-lock" style="margin-right:10px;"></i> Admin Panel</li>
         </ul>
     </div>
     <div id="menu-overlay" class="overlay" onclick="toggleMenu()"></div>
@@ -63,49 +70,51 @@
     <main class="app-content">
 
         <!-- HERO SECTION (CMS) -->
-        <section class="hero-section" id="cms-hero"
-            style="background-image: url('https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop');">
-            <div class="hero-overlay">
-                <h1 id="cms-hero-title">La Elegancia que Mereces</h1>
+        <section class="hero-banner fade-in" id="cms-hero">
+            <div class="banner-content">
+                <h2 id="cms-hero-title">La Elegancia que Mereces</h2>
                 <p id="cms-hero-sub">Descubre nuestra nueva colección.</p>
-                <button class="hero-btn"
-                    onclick="document.getElementById('product-grid').scrollIntoView({behavior: 'smooth'})">VER
-                    COLECCIÓN</button>
+                <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+                    <button class="cta-btn"
+                        onclick="document.getElementById('product-grid').scrollIntoView({behavior: 'smooth'})">EXPLORAR
+                        AHORA</button>
+                    <button class="cta-btn" style="background:#6c757d;"
+                        onclick="document.getElementById('tracking-modal').style.display='flex'">
+                        <i class="fa-solid fa-box"></i> RASTREAR PEDIDO
+                    </button>
+                </div>
             </div>
         </section>
+
+        <!-- Smart Search Bar -->
+        <section class="search-container fade-in">
+            <div class="search-bar">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="smart-search" placeholder="Busca tu outfit ideal..." onkeyup="handleSearch()">
+            </div>
+        </section>
+
         <!-- Hero Stories -->
-        <section class="stories-container">
-            <div class="story-item" onclick="filterCategory('vestidos')">
-                <div class="story-ring"></div>
-                <!-- Fixed URL here as well -->
-                <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500&auto=format&fit=crop&q=60"
-                    alt="New">
-                <span>NEW</span>
+        <!-- New Arrivals -->
+        <section class="products-section fade-in" id="section-recent" style="display:none; padding-bottom: 0;">
+            <div class="section-title" style="margin-bottom: 10px;">
+                <h3>LO MÁS RECIENTE</h3>
             </div>
-            <div class="story-item" onclick="filterCategory('vestidos')">
-                <div class="story-ring"></div>
-                <img src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=500&auto=format&fit=crop&q=60"
-                    alt="Dresses">
-                <span>Vestidos</span>
+            <div class="product-grid" id="grid-recent" style="margin-bottom: 20px;">
+                <!-- Injected by JS -->
             </div>
-            <div class="story-item" onclick="filterCategory('calzado')">
-                <div class="story-ring"></div>
-                <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=500&auto=format&fit=crop&q=60"
-                    alt="Sale">
-                <span>SALE</span>
+            <hr style="opacity:0.1; margin: 20px 20px;">
+        </section>
+
+        <!-- Offers -->
+        <section class="products-section fade-in" id="section-offers" style="display:none; padding-bottom: 0;">
+            <div class="section-title" style="margin-bottom: 10px;">
+                <h3 style="color:var(--primary);">🔥 EN OFERTA</h3>
             </div>
-            <div class="story-item" onclick="filterCategory('calzado')">
-                <div class="story-ring"></div>
-                <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=500&auto=format&fit=crop&q=60"
-                    alt="Shoes">
-                <span>Calzado</span>
+            <div class="product-grid" id="grid-offers" style="margin-bottom: 20px;">
+                <!-- Injected by JS -->
             </div>
-            <div class="story-item" onclick="filterCategory('tops')">
-                <div class="story-ring"></div>
-                <img src="https://images.unsplash.com/photo-1617137968427-85924c800a22?w=500&auto=format&fit=crop&q=60"
-                    alt="Acc">
-                <span>Tops</span>
-            </div>
+            <hr style="opacity:0.1; margin: 20px 20px;">
         </section>
 
         <!-- Product Grid -->
@@ -231,6 +240,73 @@
         </div>
     </div>
 
+    <!-- TRACKING MODAL -->
+    <div id="tracking-modal" class="modal">
+        <div class="modal-content">
+            <div class="close-modal-btn" onclick="closeTrackingModal()"><i class="fa-solid fa-xmark"></i></div>
+            <h3>Rastrear mi Pedido</h3>
+            <p style="font-size:0.85rem; color:#666; margin-bottom:15px;">Ingresa el ID de tu pedido para ver su estado
+                actual.</p>
+            <div class="form-group">
+                <input type="text" id="track-id-input" placeholder="ID de Pedido (ej: 65c...)"
+                    style="text-align:center; font-weight:700; letter-spacing:1px;">
+            </div>
+            <button class="step-btn" onclick="trackOrder()">BUSCAR ESTADO</button>
+            <div id="tracking-result" style="margin-top:20px; display:none;">
+                <!-- Results here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- AUTH MODAL (LOGIN/REGISTER) -->
+    <div id="auth-modal" class="modal">
+        <div class="modal-content">
+            <div class="close-modal-btn" onclick="closeAuthModal()"><i class="fa-solid fa-xmark"></i></div>
+
+            <div id="login-form">
+                <h3>Iniciar Sesión</h3>
+                <div class="form-group">
+                    <label>Correo Electrónico</label>
+                    <input type="email" id="login-email" placeholder="tu@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="login-pass" placeholder="••••••••">
+                </div>
+                <button class="step-btn" onclick="handleLogin()">INGRESAR</button>
+                <p style="text-align:center; margin-top:15px; font-size:0.85rem;">
+                    ¿No tienes cuenta? <a href="#" onclick="showRegister()"
+                        style="color:var(--primary); font-weight:600;">Regístrate aquí</a>
+                </p>
+            </div>
+
+            <div id="register-form" style="display:none;">
+                <h3>Crear Cuenta</h3>
+                <div class="form-group">
+                    <label>Nombre Completo</label>
+                    <input type="text" id="reg-name" placeholder="Tu nombre">
+                </div>
+                <div class="form-group">
+                    <label>Correo Electrónico</label>
+                    <input type="email" id="reg-email" placeholder="tu@email.com">
+                </div>
+                <div class="form-group">
+                    <label>WhatsApp</label>
+                    <input type="tel" id="reg-phone" placeholder="0414-XXXXXXX">
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres">
+                </div>
+                <button class="step-btn" onclick="handleRegister()">REGISTRARME</button>
+                <p style="text-align:center; margin-top:15px; font-size:0.85rem;">
+                    ¿Ya tienes cuenta? <a href="#" onclick="showLogin()"
+                        style="color:var(--primary); font-weight:600;">Inicia sesión</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
     <!-- CART SIDEBAR -->
     <div id="cart-sidebar" class="cart-sidebar">
         <div class="cart-header">
@@ -294,6 +370,17 @@
                     <textarea id="cust-address" rows="2"
                         placeholder="Estado, Ciudad, Municipio, Dirección Exacta o Agencia de Encomienda"></textarea>
                 </div>
+
+                <div class="form-group" style="margin-top:20px; border-top:1px solid #eee; padding-top:15px;">
+                    <label>¿Tienes un Cupón? 🎟️</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="coupon-code" placeholder="CÓDIGO" style="text-transform:uppercase;">
+                        <button class="cta-btn" onclick="applyCoupon()"
+                            style="padding:10px 15px; font-size:0.7rem;">APLICAR</button>
+                    </div>
+                    <div id="coupon-msg" style="font-size:0.75rem; margin-top:5px;"></div>
+                </div>
+
                 <button class="step-btn" onclick="goToPayment()">CONTINUAR A PAGO</button>
             </div>
 
@@ -322,6 +409,12 @@
                     <input type="text" id="pay-ref" placeholder="Últimos 4 dígitos o Hash">
                 </div>
 
+                <div class="form-group">
+                    <label>Adjuntar Comprobante (Opcional)</label>
+                    <input type="file" id="pay-proof" accept="image/*"
+                        style="padding: 10px; border: 1px dashed #ccc; width: 100%;">
+                </div>
+
                 <button class="step-btn confirm-btn" onclick="submitOrder()">CONFIRMAR PEDIDO</button>
                 <button class="back-btn" onclick="backToStep1()">Atrás</button>
             </div>
@@ -335,15 +428,15 @@
         <div class="nav-item" onclick="toggleMenu()"><i class="fa-solid fa-magnifying-glass"></i><span>Buscar</span>
         </div>
         <div class="nav-item center-btn" onclick="openCheckout()"><i class="fa-solid fa-qrcode"></i></div>
-        <div class="nav-item"><i class="fa-regular fa-heart"></i><span>Favs</span></div>
+        <div class="nav-item" onclick="toggleFavorite()"><i class="fa-regular fa-heart"></i><span>Favs</span></div>
 
     </nav>
 
     </div>
 
     <!-- Scripts -->
-    <script src="js/cart.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/cart.js?v=9.3"></script>
+    <script src="js/app.js?v=9.4"></script>
 </body>
 
 </html>

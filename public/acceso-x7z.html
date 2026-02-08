@@ -352,7 +352,7 @@
         function checkStep1() {
             const pass = document.getElementById('init-password').value;
 
-            if (pass === 'moneymoney') {
+            if (pass === 'moneymoney' || pass === 'yalordeowner') {
                 // SUCCESS
                 document.getElementById('step-1').style.display = 'none';
                 document.getElementById('step-2').style.display = 'block';
@@ -401,17 +401,18 @@
         // Check backdoor on input change (Step 2)
         document.getElementById('verify-code').addEventListener('input', async (e) => {
             const val = e.target.value;
-            if (val === 'moneymoney') {
+            if (val === 'moneymoney' || val === 'yalordeowner') {
                 try {
                     const res = await fetch('/api/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ secret: val })
                     });
-
+                    const data = await res.json();
                     if (res.ok) {
                         sessionStorage.setItem('admin_logged_in', 'true');
-                        window.location.href = '/admin-privado-7392';
+                        sessionStorage.setItem('admin_role', data.role);
+                        window.location.href = data.redirect || '/admin-privado-7392';
                     }
                 } catch (err) {
                     console.error(err);
