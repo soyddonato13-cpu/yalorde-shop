@@ -367,8 +367,9 @@ app.post('/api/orders', upload.single('paymentProof'), async (req, res) => {
         await newOrder.save();
         res.status(201).json({ success: true, orderId: newOrder._id, trackingCode: trackingCode });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error saving order' });
+        console.error("❌ Error creating order:", err.message);
+        console.error(err.stack); // Detail for debugging
+        res.status(500).json({ error: 'Error saving order: ' + err.message });
     }
 });
 
@@ -558,3 +559,5 @@ if (process.env.NODE_ENV !== 'production' && !process.env.NETLIFY) {
         console.log(`Server running locally on port ${PORT}`);
     });
 }
+
+module.exports = app;

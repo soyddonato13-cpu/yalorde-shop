@@ -1,5 +1,4 @@
-const app = require('../server');
-// Since server.js exports { handler }, we can just re-export it.
-// Actually, server.js exports handler which IS the serverless wrapped app.
+const serverless = require('serverless-http');
+const app = require('../server'); // Import app from root
 
-module.exports.handler = app.handler;
+module.exports.handler = serverless(app);
