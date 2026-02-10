@@ -64,6 +64,8 @@ body {
     /* Adjust based on header size */
     width: auto;
     object-fit: contain;
+    filter: none !important;
+    /* Ensure genuine colors */
 }
 
 .menu-btn,
