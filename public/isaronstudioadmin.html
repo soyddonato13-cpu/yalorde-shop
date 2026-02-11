@@ -438,7 +438,20 @@
                 </div>
 
                 <div class="card">
-                    <h3 id="inv-list-title">Lista de Productos</h3>
+                    <div
+                        style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap; justify-content:space-between; align-items:center;">
+                        <h3 id="inv-list-title" style="margin:0;">Lista de Productos</h3>
+                        <div style="display:flex; gap:10px; flex:1; max-width:400px;">
+                            <input type="text" id="inv-search" placeholder="🔍 Buscar..." onkeyup="filterInventory()"
+                                style="padding:8px; border:1px solid #ddd; border-radius:6px; flex:1;">
+                            <select id="inv-filter-stock" onchange="filterInventory()"
+                                style="padding:8px; border:1px solid #ddd; border-radius:6px;">
+                                <option value="all">Todo</option>
+                                <option value="low">Stock Bajo</option>
+                                <option value="out">Agotado</option>
+                            </select>
+                        </div>
+                    </div>
                     <div id="inv-list">
                         <!-- Products here -->
                         <p style="text-align:center; color:#999;">Cargando inventario...</p>
@@ -668,16 +681,26 @@
 
             function renderInventory(products) {
                 const list = document.getElementById('inv-list');
-                if (!products || !Array.isArray(products)) {
-                    list.innerHTML = '<p style="text-align:center; color:red;">Error al procesar productos.</p>';
-                    return;
-                }
-                if (products.length === 0) {
-                    list.innerHTML = '<p style="text-align:center; color:#999;">No hay productos registrados.</p>';
+
+                // Filter Logic
+                const term = document.getElementById('inv-search') ? document.getElementById('inv-search').value.toLowerCase() : '';
+                const statusFilter = document.getElementById('inv-filter-stock') ? document.getElementById('inv-filter-stock').value : 'all';
+
+                const filtered = (products || []).filter(p => {
+                    const totalStock = Object.values(p.sizes || {}).reduce((a, b) => a + (b.stock || 0), 0);
+                    const matchesTerm = p.title.toLowerCase().includes(term);
+                    let matchesStatus = true;
+                    if (statusFilter === 'low') matchesStatus = totalStock <= 5 && totalStock > 0;
+                    if (statusFilter === 'out') matchesStatus = totalStock === 0;
+                    return matchesTerm && matchesStatus;
+                });
+
+                if (filtered.length === 0) {
+                    list.innerHTML = '<p style="text-align:center; color:#999;">No hay coinciciencias en el inventario.</p>';
                     return;
                 }
 
-                const sorted = [...products].sort((a, b) => a.isTrending ? -1 : 1); // Trending first
+                const sorted = [...filtered].sort((a, b) => a.isTrending ? -1 : 1); // Trending first
 
                 list.innerHTML = sorted.map(p => {
                     const sizes = p.sizes || {};
@@ -701,21 +724,33 @@
                                 </div>
                             </div>
                         </div>
-                        <div style="${adminRole === 'owner' ? 'display:none;' : ''}">
-                            <button class="btn-action btn-edit" onclick="editProduct('${p.id}')"><i class="fa-solid fa-pen"></i></button>
-                            <button class="btn-action btn-delete" onclick="deleteProduct('${p.id}')"><i class="fa-solid fa-trash"></i></button>
+                        <div>
+                            <button class="btn-action btn-edit" onclick="editProduct('${p._id}')"><i class="fa-solid fa-pen"></i></button>
+                            ${adminRole !== 'owner' ? `<button class="btn-action btn-delete" onclick="deleteProduct('${p._id}')"><i class="fa-solid fa-trash"></i></button>` : ''}
                         </div>
                     </div>
                 `;
                 }).join('');
             }
 
+            // Global Filter Trigger
+            function filterInventory() {
+                renderInventory(allProducts);
+            }
+
             // Edit Product (Populate Form)
             function editProduct(id) {
-                const p = allProducts.find(prod => String(prod.id) === String(id));
+                const p = allProducts.find(prod => String(prod._id) === String(id));
                 if (!p) return;
 
-                document.getElementById('edit-id').value = p.id;
+                // Show Form Card if Hidden (for Owner)
+                const formCard = document.querySelector('#view-inventory .card:first-of-type');
+                if (formCard) {
+                    formCard.style.display = 'block';
+                    formCard.scrollIntoView({ behavior: 'smooth' });
+                }
+
+                document.getElementById('edit-id').value = p._id;
                 document.getElementById('inp-title').value = p.title;
                 document.getElementById('inp-category').value = p.category;
                 document.getElementById('inp-price').value = p.price;
@@ -732,8 +767,6 @@
                 document.getElementById('save-btn').textContent = "Actualizar";
                 document.getElementById('cancel-btn').style.display = 'block';
                 document.getElementById('current-img-msg').style.display = 'block';
-
-                document.querySelector('.main-content').scrollTop = 0;
             }
 
             function resetForm() {
@@ -743,6 +776,12 @@
                 document.getElementById('save-btn').textContent = "Guardar Producto";
                 document.getElementById('cancel-btn').style.display = 'none';
                 document.getElementById('current-img-msg').style.display = 'none';
+
+                // Hide Form again if owner
+                if (adminRole === 'owner') {
+                    const formCard = document.querySelector('#view-inventory .card:first-of-type');
+                    if (formCard) formCard.style.display = 'none';
+                }
             }
 
             // Submit Product

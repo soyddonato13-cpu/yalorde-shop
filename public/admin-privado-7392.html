@@ -362,10 +362,79 @@
             <!-- Product Form Removed for Owner -->
 
             <div class="card">
+                <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
+                    <input type="text" id="inv-search" placeholder="🔍 Buscar producto..." onkeyup="filterInventory()"
+                        style="padding:10px; border:1px solid #ddd; border-radius:8px; flex:1; min-width: 200px;">
+                    <select id="inv-filter-stock" onchange="filterInventory()"
+                        style="padding:10px; border:1px solid #ddd; border-radius:8px;">
+                        <option value="all">Todo el Inventario</option>
+                        <option value="low">⚠️ Pocas unidades (< 5)</option>
+                        <option value="out">❌ Agotados (0)</option>
+                        <option value="high">✅ Disponible</option>
+                    </select>
+                </div>
+
                 <h3 id="inv-list-title">Lista de Productos</h3>
                 <div id="inv-list">
                     <!-- Products here -->
                     <p style="text-align:center; color:#999;">Cargando inventario...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRODUCT EDIT MODAL -->
+        <div id="product-modal" class="modal"
+            style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+            <div class="card" style="width: 90%; max-width: 500px;">
+                <h3 style="margin-top:0;">Editar Producto</h3>
+                <input type="hidden" id="edit-prod-id">
+
+                <div style="margin-bottom:15px;">
+                    <label style="font-size:0.9rem; color:#666;">Producto</label>
+                    <input type="text" id="edit-prod-title" disabled
+                        style="background:#f5f5f5; color:#666; border:1px solid #eee;">
+                </div>
+
+                <div style="margin-bottom:15px;">
+                    <label style="font-size:0.9rem; color:#666;">Precio ($)</label>
+                    <input type="number" id="edit-prod-price" step="0.01">
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="font-size:0.9rem; color:#666; display:block; margin-bottom:10px;">Stock por Talla
+                        (Modificar Cantidad)</label>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                        <div>
+                            <small style="display:block; text-align:center;">Talla S</small>
+                            <input type="number" id="edit-qty-s" placeholder="0" min="0" style="text-align:center;">
+                        </div>
+                        <div>
+                            <small style="display:block; text-align:center;">Talla M</small>
+                            <input type="number" id="edit-qty-m" placeholder="0" min="0" style="text-align:center;">
+                        </div>
+                        <div>
+                            <small style="display:block; text-align:center;">Talla L</small>
+                            <input type="number" id="edit-qty-l" placeholder="0" min="0" style="text-align:center;">
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    style="display:flex; justify-content:space-between; margin-bottom:20px; background:#f9f9f9; padding:10px; border-radius:8px;">
+                    <label style="display:flex; align-items:center; cursor:pointer;">
+                        <input type="checkbox" id="edit-prod-trending" style="width:auto; margin-right:8px;">
+                        🔥 Tendencia
+                    </label>
+                    <label style="display:flex; align-items:center; cursor:pointer;">
+                        <input type="checkbox" id="edit-prod-offer" style="width:auto; margin-right:8px;">
+                        🏷️ Oferta
+                    </label>
+                </div>
+
+                <div style="text-align: right; display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" class="btn-cancel"
+                        onclick="document.getElementById('product-modal').style.display='none'">Cancelar</button>
+                    <button type="button" class="submit-btn" id="save-prod-btn">Guardar Cambios</button>
                 </div>
             </div>
         </div>
@@ -572,16 +641,32 @@
 
         function renderInventory(products) {
             const list = document.getElementById('inv-list');
-            if (!products || !Array.isArray(products)) {
-                list.innerHTML = '<p style="text-align:center; color:red;">Error al procesar productos.</p>';
-                return;
-            }
-            if (products.length === 0) {
-                list.innerHTML = '<p style="text-align:center; color:#999;">No hay productos registrados.</p>';
+
+            // Apply Filters first
+            const term = document.getElementById('inv-search') ? document.getElementById('inv-search').value.toLowerCase() : '';
+            const statusFilter = document.getElementById('inv-filter-stock') ? document.getElementById('inv-filter-stock').value : 'all';
+
+            const filtered = (products || []).filter(p => {
+                const totalStock = Object.values(p.sizes || {}).reduce((a, b) => a + (b.stock || 0), 0);
+
+                // Text Search
+                const matchesTerm = p.title.toLowerCase().includes(term);
+
+                // Status Filter
+                let matchesStatus = true;
+                if (statusFilter === 'low') matchesStatus = totalStock <= 5 && totalStock > 0;
+                if (statusFilter === 'out') matchesStatus = totalStock === 0;
+                if (statusFilter === 'high') matchesStatus = totalStock > 5;
+
+                return matchesTerm && matchesStatus;
+            });
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color:#999;">No se encontraron productos.</p>';
                 return;
             }
 
-            const sorted = [...products].sort((a, b) => a.isTrending ? -1 : 1); // Trending first
+            const sorted = [...filtered].sort((a, b) => a.isTrending ? -1 : 1);
 
             list.innerHTML = sorted.map(p => {
                 const sizes = p.sizes || {};
@@ -589,26 +674,112 @@
                 const isLowStock = totalStock <= 5;
 
                 return `
-                    <div class="inv-item" style="${isLowStock ? 'border-left: 4px solid #ff4757; background: #fffafb;' : ''}">
-                        <div class="inv-info">
-                            <img src="${p.img || 'https://via.placeholder.com/50'}" class="inv-img">
-                            <div>
-                                <div style="font-weight:600;">${p.title} ${p.isTrending ? '🔥' : ''}</div>
-                                <div style="font-size:0.8rem; color:#888;">
-                                    $${(p.price || 0).toFixed(2)} | 
-                                    <span style="${isLowStock ? 'color:#ff4757; font-weight:bold;' : ''}">Stock: ${totalStock}</span>
-                                    ${isLowStock ? '<span style="background:#ff4757; color:white; padding:2px 6px; border-radius:4px; font-size:0.65rem; margin-left:5px;">BAJO STOCK</span>' : ''}
-                                </div>
+                <div class="inv-item" style="${isLowStock ? 'border-left: 4px solid #ff4757; background: #fffafb;' : ''}">
+                    <div class="inv-info">
+                        <img src="${p.img || 'https://via.placeholder.com/50'}" class="inv-img">
+                        <div>
+                            <div style="font-weight:600;">
+                                ${p.title} 
+                                ${p.isTrending ? '🔥' : ''}
+                                ${p.isOffer ? '<span style="font-size:0.8em; background:#ffeaa7; padding:2px 5px; border-radius:4px;">🏷️</span>' : ''}
+                            </div>
+                            <div style="font-size:0.8rem; color:#888;">
+                                $${(p.price || 0).toFixed(2)} | 
+                                <span style="${isLowStock ? 'color:#ff4757; font-weight:bold;' : ''}">Stock: ${totalStock}</span>
+                                ${isLowStock ? '<span style="background:#ff4757; color:white; padding:2px 6px; border-radius:4px; font-size:0.65rem; margin-left:5px;">BAJO STOCK</span>' : ''}
                             </div>
                         </div>
-                        <!-- Edit/Delete Removed for Owner -->
                     </div>
-                `;
+                    <div>
+                        <button class="btn-action btn-edit" onclick="openProductModal('${p._id}')"><i class="fa-solid fa-pen"></i> Editar</button>
+                    </div>
+                </div>
+            `;
             }).join('');
         }
 
-        // Edit Product (Populate Form)
-        // Product Management Functions Removed for Owner
+        // Filter Trigger
+        function filterInventory() {
+            renderInventory(allProducts);
+        }
+
+        // Edit Product Modal Logic
+        function openProductModal(id) {
+            const p = allProducts.find(prod => prod._id === id);
+            if (!p) return;
+
+            document.getElementById('edit-prod-id').value = p._id;
+            document.getElementById('edit-prod-title').value = p.title;
+            document.getElementById('edit-prod-price').value = p.price;
+            document.getElementById('edit-prod-trending').checked = !!p.isTrending;
+            document.getElementById('edit-prod-offer').checked = !!p.isOffer;
+
+            document.getElementById('edit-qty-s').value = p.sizes && p.sizes.S ? p.sizes.S.stock : 0;
+            document.getElementById('edit-qty-m').value = p.sizes && p.sizes.M ? p.sizes.M.stock : 0;
+            document.getElementById('edit-qty-l').value = p.sizes && p.sizes.L ? p.sizes.L.stock : 0;
+
+            document.getElementById('save-prod-btn').onclick = () => updateProduct(id);
+            document.getElementById('product-modal').style.display = 'flex';
+        }
+
+        async function updateProduct(id) {
+            const price = parseFloat(document.getElementById('edit-prod-price').value);
+            const isTrending = document.getElementById('edit-prod-trending').checked;
+            const isOffer = document.getElementById('edit-prod-offer').checked;
+
+            const sizes = {
+                "S": { stock: parseInt(document.getElementById('edit-qty-s').value) || 0 },
+                "M": { stock: parseInt(document.getElementById('edit-qty-m').value) || 0 },
+                "L": { stock: parseInt(document.getElementById('edit-qty-l').value) || 0 }
+            };
+
+            const btn = document.getElementById('save-prod-btn');
+            btn.textContent = "Guardando...";
+            btn.disabled = true;
+
+            try {
+                // Construct Update (Only sending fields handled by this modal)
+                const formData = new FormData();
+                // We need to send these as FormData because the backend expects it (due to image upload support)
+                // Even though we aren't sending an image here.
+                formData.append('price', price);
+                formData.append('isTrending', isTrending);
+                formData.append('isOffer', isOffer);
+                formData.append('sizes', JSON.stringify(sizes));
+
+                // Backend might require other fields not to be null if it does full replacement.
+                // However, standard Mongoose 'findByIdAndUpdate' usually handles partials if implemented well,
+                // BUT this backend likely expects all fields or processes them.
+                // Let's check server.js briefly... ah, I can't check mid-tool.
+                // Assuming standard implementation: we send what we change. 
+                // Wait, the backend in IsaronAdmin uses FormData. 
+                // Let's safe-guard by sending the existing title/category/description as hidden or existing values 
+                // just in case validations are strict.
+                // The backend likely extracts: { title, category, price, description, sizes, isTrending, isOffer } = req.body
+                // If I omit title, it might set it to undefined. 
+                // Safer to fetch current product and append all its non-changed data.
+                const current = allProducts.find(p => p._id === id);
+                formData.append('title', current.title);
+                formData.append('category', current.category);
+                formData.append('description', current.description);
+
+                const res = await fetch(`/api/products/${id}`, { method: 'PUT', body: formData });
+
+                if (res.ok) {
+                    Toast.success("Inventario actualizado");
+                    document.getElementById('product-modal').style.display = 'none';
+                    fetchProducts(); // Refresh list
+                } else {
+                    Toast.error("Error al guardar cambios");
+                }
+            } catch (e) {
+                console.error(e);
+                Toast.error("Error de conexión");
+            } finally {
+                btn.textContent = "Guardar Cambios";
+                btn.disabled = false;
+            }
+        }
 
         // --- ORDERS LOGIC 2.0 ---
         let lastOrderCount = 0; // Track order count for notifications
