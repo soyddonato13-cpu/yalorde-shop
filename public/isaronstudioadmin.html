@@ -319,15 +319,54 @@
                     </div>
                 </div>
 
-                <div class="card">
-                    <h3>Tendencia de Ventas (7 Días)</h3>
-                    <canvas id="salesChart" height="100"></canvas>
+                <!-- KPI Cards -->
+                <div
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                    <div class="card" style="text-align: center; background: #fff;">
+                        <h4 style="color: #888; margin-bottom: 5px;">Ingresos Totales</h4>
+                        <h2 style="color: var(--primary); font-size: 2rem;" id="stat-revenue">$0.00</h2>
+                    </div>
+                    <div class="card" style="text-align: center; background: #fff;">
+                        <h4 style="color: #888; margin-bottom: 5px;">Pedidos Completados</h4>
+                        <h2 style="color: var(--success); font-size: 2rem;" id="stat-orders-ok">0</h2>
+                    </div>
+                    <div class="card" style="text-align: center; background: #fff;">
+                        <h4 style="color: #888; margin-bottom: 5px;">Stock Bajo</h4>
+                        <h2 style="color: var(--danger); font-size: 2rem;" id="stat-low-stock">0</h2>
+                    </div>
                 </div>
 
-                <div class="card" id="dashboard-low-stock-card" style="display:none; margin-top:20px;">
-                    <h3 style="color:#ff4757;"><i class="fa-solid fa-triangle-exclamation"></i> Stock Bajo Requerido
-                    </h3>
-                    <div id="dashboard-low-stock-list"></div>
+                <div class="card">
+                    <h3>Tendencia de Ventas (7 Días)</h3>
+                    <canvas id="salesChart" height="80"></canvas>
+                </div>
+
+                <div
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+                    <!-- Top Products -->
+                    <div class="card">
+                        <h3>🏆 Top 5 Productos</h3>
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                            <thead>
+                                <tr style="background: #f8f9fa;">
+                                    <th style="padding: 8px;">Producto</th>
+                                    <th style="padding: 8px; text-align: right;">Vendidos</th>
+                                    <th style="padding: 8px; text-align: right;">Ingreso</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-products-list">
+                                <tr>
+                                    <td colspan="3" style="text-align:center; padding:20px;">Cargando...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Low Stock -->
+                    <div class="card" id="dashboard-low-stock-card" style="display:none;">
+                        <h3 style="color:#ff4757;"><i class="fa-solid fa-triangle-exclamation"></i> Alerta de Stock</h3>
+                        <div id="dashboard-low-stock-list"></div>
+                    </div>
                 </div>
             </div>
 
@@ -1057,6 +1096,80 @@
                     Toast.error("Error al procesar imágenes o conexión");
                 }
             });
+
+            // --- ANALYTICS LOGIC ---
+            async function fetchStats() {
+                try {
+                    const res = await fetch('/api/admin/stats');
+                    const data = await res.json();
+
+                    if (!data) return;
+
+                    // 1. KPI Cards
+                    document.getElementById('stat-revenue').textContent = `$${data.totalRevenue.toFixed(2)}`;
+
+                    const deliveredCount = data.statusDistribution.find(s => s._id === 'delivered')?.count || 0;
+                    const shippedCount = data.statusDistribution.find(s => s._id === 'shipped')?.count || 0;
+                    document.getElementById('stat-orders-ok').textContent = deliveredCount + shippedCount;
+
+                    document.getElementById('stat-low-stock').textContent = data.lowStockCount;
+
+                    // 2. Weekly Sales Chart
+                    const ctx = document.getElementById('salesChart').getContext('2d');
+
+                    // Cleanup old chart if exists (optional, simply prevent overlapping)
+                    if (window.mySalesChart) window.mySalesChart.destroy();
+
+                    const labels = data.weeklySales.map(d => d._id); // Dates
+                    const values = data.weeklySales.map(d => d.total);
+
+                    window.mySalesChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Ventas ($)',
+                                data: values,
+                                borderColor: '#e84393',
+                                backgroundColor: 'rgba(232, 67, 147, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                pointBackgroundColor: '#fff',
+                                pointBorderColor: '#e84393',
+                                pointRadius: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { display: false } },
+                            scales: { y: { beginAtZero: true } }
+                        }
+                    });
+
+                    // 3. Top Products Table
+                    const topList = document.getElementById('top-products-list');
+                    if (data.topProducts && data.topProducts.length > 0) {
+                        topList.innerHTML = data.topProducts.map(p => `
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 10px; font-weight: 500;">${p._id}</td>
+                                <td style="padding: 10px; text-align: right;">${p.count}</td>
+                                <td style="padding: 10px; text-align: right; color: var(--success);">$${p.revenue.toFixed(2)}</td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        topList.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:15px; color:#999;">Sin datos de ventas aún</td></tr>';
+                    }
+
+                    // 4. Low Stock List
+                    if (data.lowStockCount > 0) {
+                        document.getElementById('dashboard-low-stock-card').style.display = 'block';
+                        // Ideally we would fetch the list of low stock products here if needed
+                    }
+
+                } catch (e) {
+                    console.error("Error loading stats:", e);
+                }
+            }
 
             // --- UPLOAD DRAG & DROP ---
             const dropZone = document.getElementById('drop-zone');

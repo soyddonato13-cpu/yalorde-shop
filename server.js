@@ -466,11 +466,27 @@ app.get('/api/admin/stats', requireAuth, async (req, res) => {
             { $sort: { _id: 1 } }
         ]);
 
+        // Top Selling Products
+        const topProducts = await Order.aggregate([
+            { $match: { status: { $ne: 'cancelled' } } },
+            { $unwind: "$items" },
+            {
+                $group: {
+                    _id: "$items.title",
+                    count: { $sum: "$items.qty" },
+                    revenue: { $sum: { $multiply: ["$items.price", "$items.qty"] } }
+                }
+            },
+            { $sort: { count: -1 } },
+            { $limit: 5 }
+        ]);
+
         res.json({
             totalRevenue: totalSales[0]?.total || 0,
             statusDistribution: ordersByStatus,
             lowStockCount,
-            weeklySales
+            weeklySales,
+            topProducts
         });
     } catch (err) {
         console.error(err);
