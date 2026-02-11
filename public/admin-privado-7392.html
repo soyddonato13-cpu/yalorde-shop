@@ -304,271 +304,291 @@
 
             <!-- KPI Cards -->
             <div
-                style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:20px; margin-bottom:30px;">
-                <div class="card" style="text-align:center;">
-                    <div style="font-size:0.9rem; color:#666; margin-bottom:10px;">Ventas Totales</div>
-                    <div id="stat-revenue" style="font-size:1.8rem; font-weight:700; color:var(--primary);">$0.00</div>
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                <div class="card" style="text-align: center; background: #fff;">
+                    <h4 style="color: #888; margin-bottom: 5px;">Ingresos Totales</h4>
+                    <h2 style="color: var(--primary); font-size: 2rem;" id="stat-revenue">$0.00</h2>
                 </div>
-                <div class="card" style="text-align:center;">
-                    <div style="font-size:0.9rem; color:#666; margin-bottom:10px;">Pedidos Pendientes</div>
-                    <div id="stat-pending" style="font-size:1.8rem; font-weight:700; color:orange;">0</div>
+                <div class="card" style="text-align: center; background: #fff;">
+                    <h4 style="color: #888; margin-bottom: 5px;">Pedidos Completados</h4>
+                    <h2 style="color: var(--success); font-size: 2rem;" id="stat-orders-ok">0</h2>
                 </div>
-                <div class="card" style="text-align:center;">
-                    <div style="font-size:0.9rem; color:#666; margin-bottom:10px;">Stock Bajo (< 5)</div>
-                            <div id="stat-low-stock" style="font-size:1.8rem; font-weight:700; color:red;">0</div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <h3>Tendencia de Ventas (7 Días)</h3>
-                    <canvas id="salesChart" height="100"></canvas>
-                </div>
-
-                <div class="card" id="dashboard-low-stock-card" style="display:none; margin-top:20px;">
-                    <h3 style="color:#ff4757;"><i class="fa-solid fa-triangle-exclamation"></i> Stock Bajo Requerido
-                    </h3>
-                    <div id="dashboard-low-stock-list"></div>
+                <div class="card" style="text-align: center; background: #fff;">
+                    <h4 style="color: #888; margin-bottom: 5px;">Stock Bajo</h4>
+                    <h2 style="color: var(--danger); font-size: 2rem;" id="stat-low-stock">0</h2>
                 </div>
             </div>
 
-            <!-- INVENTORY VIEW -->
-            <div id="view-inventory" class="view-section">
-                <div class="header">
-                    <div class="page-title">Inventario de Productos</div>
-                </div>
-
-                <!-- Product Form Removed for Owner -->
-
-                <div class="card">
-                    <h3 id="inv-list-title">Lista de Productos</h3>
-                    <div id="inv-list">
-                        <!-- Products here -->
-                        <p style="text-align:center; color:#999;">Cargando inventario...</p>
-                    </div>
-                </div>
+            <div class="card">
+                <h3>Tendencia de Ventas (7 Días)</h3>
+                <canvas id="salesChart" height="80"></canvas>
             </div>
 
-            <!-- ORDERS VIEW -->
-            <div id="view-orders" class="view-section">
-                <div class="header" style="flex-wrap: wrap; gap: 10px;">
-                    <div class="page-title">Gestión de Pedidos</div>
-                    <div style="display:flex; gap:10px; flex-grow: 1; justify-content: flex-end;">
-                        <input type="text" id="order-search" placeholder="🔍 Buscar nombre, ref..."
-                            onkeyup="filterOrders()"
-                            style="padding: 10px; border: 1px solid #ddd; border-radius: 8px; width: 200px;">
-                        <select id="order-filter-status" onchange="filterOrders()"
-                            style="padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
-                            <option value="all">Todos los Estados</option>
-                            <option value="pending">🟡 Pendientes</option>
-                            <option value="approved">🟢 Aprobados</option>
-                            <option value="shipped">🚚 Enviados</option>
-                            <option value="delivered">✅ Entregados</option>
-                            <option value="cancelled">❌ Cancelados</option>
-                        </select>
-                        <button class="logout-btn" onclick="fetchOrders()"><i class="fa-solid fa-rotate"></i></button>
-                    </div>
-                </div>
-
-                <div class="card" style="overflow-x:auto;">
-                    <table id="orders-table">
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+                <!-- Top Products -->
+                <div class="card">
+                    <h3>🏆 Top 5 Productos</h3>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                         <thead>
-                            <tr>
-                                <th onclick="sortOrders('date')" style="cursor:pointer">Fecha ↕</th>
-                                <th onclick="sortOrders('customer')" style="cursor:pointer">Cliente ↕</th>
-                                <th>Estado</th>
-                                <th>Total</th>
-                                <th>Pago</th>
-                                <th>Acciones</th>
+                            <tr style="background: #f8f9fa;">
+                                <th style="padding: 8px;">Producto</th>
+                                <th style="padding: 8px; text-align: right;">Vendidos</th>
+                                <th style="padding: 8px; text-align: right;">Ingreso</th>
                             </tr>
                         </thead>
-                        <tbody id="orders-list">
-                            <!-- Orders injected here -->
+                        <tbody id="top-products-list">
+                            <tr>
+                                <td colspan="3" style="text-align:center; padding:20px;">Cargando...</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
-            </div>
 
-            <!-- ORDER EDIT MODAL -->
-            <div id="order-modal" class="modal"
-                style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
-                <div class="card" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
-                    <h3 style="margin-top:0;">Detalle de Pedido</h3>
-                    <div id="order-modal-content"></div>
-                    <div style="margin-top: 20px; text-align: right;">
-                        <button type="button" class="btn-cancel"
-                            onclick="document.getElementById('order-modal').style.display='none'">Cerrar</button>
-                        <button type="button" class="submit-btn" id="save-order-btn">Guardar Cambios</button>
-                    </div>
+                <!-- Low Stock -->
+                <div class="card" id="dashboard-low-stock-card" style="display:none;">
+                    <h3 style="color:#ff4757;"><i class="fa-solid fa-triangle-exclamation"></i> Alerta de Stock</h3>
+                    <div id="dashboard-low-stock-list"></div>
                 </div>
             </div>
-
-            <!-- CMS VIEW (Personalizar) -->
-            <div id="view-cms" class="view-section">
-                <div class="header">
-                    <div class="page-title">Personalizar Tienda</div>
-                </div>
-
-                <div class="card">
-                    <h3>🎨 Apariencia</h3>
-                    <form id="cms-form">
-                        <div class="form-grid">
-                            <div>
-                                <label>Color Principal (Botones, Iconos)</label>
-                                <input type="color" name="themeColor" id="cms-color" value="#e84393">
-                            </div>
-                            <div>
-                                <label>Mensaje Barra Superior</label>
-                                <input type="text" name="infoBar" id="cms-infobar"
-                                    placeholder="Ej: Envío Gratis a toda Venezuela 🇻🇪">
-                            </div>
-                        </div>
-
-                        <div class="form-grid">
-                            <div>
-                                <label>Título Principal</label>
-                                <input type="text" name="heroTitle" id="cms-hero-title"
-                                    placeholder="Ej: Nueva Colección 2024">
-                            </div>
-                            <div>
-                                <label>Subtítulo</label>
-                                <input type="text" name="heroSubtitle" id="cms-hero-sub"
-                                    placeholder="Ej: Brilla con luz propia">
-                            </div>
-                        </div>
-
-                        <h3>📱 Redes Sociales & Contacto</h3>
-                        <div class="form-grid">
-                            <input type="text" name="whatsapp" id="cms-wa"
-                                placeholder="Link WhatsApp (https://wa.me/...)">
-                            <input type="text" name="instagram" id="cms-ig" placeholder="Link Instagram">
-                            <input type="text" name="tiktok" id="cms-tt" placeholder="Link TikTok">
-                        </div>
-
-                        <button type="submit" class="submit-btn" style="margin-top: 20px;">Guardar Cambios</button>
-                    </form>
-                </div>
-            </div>
-
         </div>
 
-        <!-- MAIN SCRIPT -->
-        <script>
-            let adminRole = sessionStorage.getItem('admin_role') || 'owner';
-            let allProducts = [];
-            let allOrders = [];
+        <!-- INVENTORY VIEW -->
+        <div id="view-inventory" class="view-section">
+            <div class="header">
+                <div class="page-title">Inventario de Productos</div>
+            </div>
 
-            function checkRoleAccess() {
-                if (adminRole === 'owner') {
-                    // Hide Add Product Form Card
-                    const productFormCard = document.querySelector('#view-inventory .card:first-of-type');
-                    if (productFormCard) productFormCard.style.display = 'none';
+            <!-- Product Form Removed for Owner -->
 
-                    // Change Inventory Page Title to something more passive
-                    const invTitle = document.querySelector('#view-inventory .page-title');
-                    if (invTitle) invTitle.textContent = "Consulta de Stock";
-                }
+            <div class="card">
+                <h3 id="inv-list-title">Lista de Productos</h3>
+                <div id="inv-list">
+                    <!-- Products here -->
+                    <p style="text-align:center; color:#999;">Cargando inventario...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ORDERS VIEW -->
+        <div id="view-orders" class="view-section">
+            <div class="header" style="flex-wrap: wrap; gap: 10px;">
+                <div class="page-title">Gestión de Pedidos</div>
+                <div style="display:flex; gap:10px; flex-grow: 1; justify-content: flex-end;">
+                    <input type="text" id="order-search" placeholder="🔍 Buscar nombre, ref..." onkeyup="filterOrders()"
+                        style="padding: 10px; border: 1px solid #ddd; border-radius: 8px; width: 200px;">
+                    <select id="order-filter-status" onchange="filterOrders()"
+                        style="padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                        <option value="all">Todos los Estados</option>
+                        <option value="pending">🟡 Pendientes</option>
+                        <option value="approved">🟢 Aprobados</option>
+                        <option value="shipped">🚚 Enviados</option>
+                        <option value="delivered">✅ Entregados</option>
+                        <option value="cancelled">❌ Cancelados</option>
+                    </select>
+                    <button class="logout-btn" onclick="fetchOrders()"><i class="fa-solid fa-rotate"></i></button>
+                </div>
+            </div>
+
+            <div class="card" style="overflow-x:auto;">
+                <table id="orders-table">
+                    <thead>
+                        <tr>
+                            <th onclick="sortOrders('date')" style="cursor:pointer">Fecha ↕</th>
+                            <th onclick="sortOrders('customer')" style="cursor:pointer">Cliente ↕</th>
+                            <th>Estado</th>
+                            <th>Total</th>
+                            <th>Pago</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-list">
+                        <!-- Orders injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ORDER EDIT MODAL -->
+        <div id="order-modal" class="modal"
+            style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+            <div class="card" style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                <h3 style="margin-top:0;">Detalle de Pedido</h3>
+                <div id="order-modal-content"></div>
+                <div style="margin-top: 20px; text-align: right;">
+                    <button type="button" class="btn-cancel"
+                        onclick="document.getElementById('order-modal').style.display='none'">Cerrar</button>
+                    <button type="button" class="submit-btn" id="save-order-btn">Guardar Cambios</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CMS VIEW (Personalizar) -->
+        <div id="view-cms" class="view-section">
+            <div class="header">
+                <div class="page-title">Personalizar Tienda</div>
+            </div>
+
+            <div class="card">
+                <h3>🎨 Apariencia</h3>
+                <form id="cms-form">
+                    <div class="form-grid">
+                        <div>
+                            <label>Color Principal (Botones, Iconos)</label>
+                            <input type="color" name="themeColor" id="cms-color" value="#e84393">
+                        </div>
+                        <div>
+                            <label>Mensaje Barra Superior</label>
+                            <input type="text" name="infoBar" id="cms-infobar"
+                                placeholder="Ej: Envío Gratis a toda Venezuela 🇻🇪">
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div>
+                            <label>Título Principal</label>
+                            <input type="text" name="heroTitle" id="cms-hero-title"
+                                placeholder="Ej: Nueva Colección 2024">
+                        </div>
+                        <div>
+                            <label>Subtítulo</label>
+                            <input type="text" name="heroSubtitle" id="cms-hero-sub"
+                                placeholder="Ej: Brilla con luz propia">
+                        </div>
+                    </div>
+
+                    <h3>📱 Redes Sociales & Contacto</h3>
+                    <div class="form-grid">
+                        <input type="text" name="whatsapp" id="cms-wa" placeholder="Link WhatsApp (https://wa.me/...)">
+                        <input type="text" name="instagram" id="cms-ig" placeholder="Link Instagram">
+                        <input type="text" name="tiktok" id="cms-tt" placeholder="Link TikTok">
+                    </div>
+
+                    <button type="submit" class="submit-btn" style="margin-top: 20px;">Guardar Cambios</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MAIN SCRIPT -->
+    <script>
+        let adminRole = sessionStorage.getItem('admin_role') || 'owner';
+        let allProducts = [];
+        let allOrders = [];
+
+        function checkRoleAccess() {
+            if (adminRole === 'owner') {
+                // Hide Add Product Form Card
+                const productFormCard = document.querySelector('#view-inventory .card:first-of-type');
+                if (productFormCard) productFormCard.style.display = 'none';
+
+                // Change Inventory Page Title to something more passive
+                const invTitle = document.querySelector('#view-inventory .page-title');
+                if (invTitle) invTitle.textContent = "Consulta de Stock";
             }
+        }
 
-            async function fetchStats() {
-                try {
-                    const res = await fetch('/api/admin/stats');
-                    const data = await res.json();
+        async function fetchStats() {
+            try {
+                const res = await fetch('/api/admin/stats');
+                const data = await res.json();
 
-                    if (document.getElementById('stat-revenue')) document.getElementById('stat-revenue').textContent = `$${(data.totalRevenue || 0).toFixed(2)}`;
+                if (document.getElementById('stat-revenue')) document.getElementById('stat-revenue').textContent = `$${(data.totalRevenue || 0).toFixed(2)}`;
 
-                    const pending = (data.statusDistribution || []).find(s => s._id === 'pending')?.count || 0;
-                    if (document.getElementById('stat-pending')) document.getElementById('stat-pending').textContent = pending;
+                const pending = (data.statusDistribution || []).find(s => s._id === 'pending')?.count || 0;
+                if (document.getElementById('stat-pending')) document.getElementById('stat-pending').textContent = pending;
 
-                    if (document.getElementById('stat-low-stock')) document.getElementById('stat-low-stock').textContent = data.lowStockCount || 0;
+                if (document.getElementById('stat-low-stock')) document.getElementById('stat-low-stock').textContent = data.lowStockCount || 0;
 
-                    if (data.weeklySales) renderChart(data.weeklySales);
-                } catch (err) {
-                    console.error("Error fetching stats:", err);
-                }
+                if (data.weeklySales) renderChart(data.weeklySales);
+            } catch (err) {
+                console.error("Error fetching stats:", err);
             }
+        }
 
-            let salesChart = null;
-            function renderChart(weeklyData) {
-                const ctx = document.getElementById('salesChart').getContext('2d');
+        let salesChart = null;
+        function renderChart(weeklyData) {
+            const ctx = document.getElementById('salesChart').getContext('2d');
 
-                const labels = weeklyData.map(d => d._id);
-                const totals = weeklyData.map(d => d.total);
+            const labels = weeklyData.map(d => d._id);
+            const totals = weeklyData.map(d => d.total);
 
-                if (salesChart) salesChart.destroy();
+            if (salesChart) salesChart.destroy();
 
-                salesChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Ventas Daily ($)',
-                            data: totals,
-                            borderColor: '#e84393',
-                            backgroundColor: 'rgba(232, 67, 147, 0.1)',
-                            fill: true,
-                            tension: 0.4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        scales: {
-                            y: { beginAtZero: true }
-                        }
+            salesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Ventas Daily ($)',
+                        data: totals,
+                        borderColor: '#e84393',
+                        backgroundColor: 'rgba(232, 67, 147, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true }
                     }
-                });
-            }
-
-            // --- NAVIGATION ---
-            function switchTab(tabId) {
-                // Update Navigation UI
-                document.querySelectorAll('.nav-item').forEach(item => {
-                    item.classList.remove('active');
-                    if (item.onclick.toString().includes(tabId)) {
-                        item.classList.add('active');
-                    }
-                });
-
-                // Update Section Visibility
-                document.querySelectorAll('.view-section').forEach(view => {
-                    view.classList.remove('active');
-                });
-                document.getElementById('view-' + tabId).classList.add('active');
-
-                // Specialized Actions
-                if (tabId === 'inventory') fetchProducts();
-                if (tabId === 'orders') fetchOrders();
-                if (tabId === 'cms') fetchCMS(); // Assuming 'cms' is the correct tabId for fetchCMS
-                if (tabId === 'dashboard') fetchStats();
-            }
-
-            // --- INVENTORY LOGIC ---
-            async function fetchProducts() {
-                try {
-                    const res = await fetch('/api/products');
-                    allProducts = await res.json();
-                    renderInventory(allProducts);
-                } catch (e) { console.error(e); Toast.error('Error cargando productos'); }
-            }
-
-            function renderInventory(products) {
-                const list = document.getElementById('inv-list');
-                if (!products || !Array.isArray(products)) {
-                    list.innerHTML = '<p style="text-align:center; color:red;">Error al procesar productos.</p>';
-                    return;
                 }
-                if (products.length === 0) {
-                    list.innerHTML = '<p style="text-align:center; color:#999;">No hay productos registrados.</p>';
-                    return;
+            });
+        }
+
+        // --- NAVIGATION ---
+        function switchTab(tabId) {
+            // Update Navigation UI
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.onclick.toString().includes(tabId)) {
+                    item.classList.add('active');
                 }
+            });
 
-                const sorted = [...products].sort((a, b) => a.isTrending ? -1 : 1); // Trending first
+            // Update Section Visibility
+            document.querySelectorAll('.view-section').forEach(view => {
+                view.classList.remove('active');
+            });
+            document.getElementById('view-' + tabId).classList.add('active');
 
-                list.innerHTML = sorted.map(p => {
-                    const sizes = p.sizes || {};
-                    const totalStock = Object.values(sizes).reduce((acc, val) => acc + (val.stock || 0), 0);
-                    const isLowStock = totalStock <= 5;
+            // Specialized Actions
+            if (tabId === 'inventory') fetchProducts();
+            if (tabId === 'orders') fetchOrders();
+            if (tabId === 'cms') fetchCMS(); // Assuming 'cms' is the correct tabId for fetchCMS
+            if (tabId === 'dashboard') fetchStats();
+        }
 
-                    return `
+        // --- INVENTORY LOGIC ---
+        async function fetchProducts() {
+            try {
+                const res = await fetch('/api/products');
+                allProducts = await res.json();
+                renderInventory(allProducts);
+            } catch (e) { console.error(e); Toast.error('Error cargando productos'); }
+        }
+
+        function renderInventory(products) {
+            const list = document.getElementById('inv-list');
+            if (!products || !Array.isArray(products)) {
+                list.innerHTML = '<p style="text-align:center; color:red;">Error al procesar productos.</p>';
+                return;
+            }
+            if (products.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color:#999;">No hay productos registrados.</p>';
+                return;
+            }
+
+            const sorted = [...products].sort((a, b) => a.isTrending ? -1 : 1); // Trending first
+
+            list.innerHTML = sorted.map(p => {
+                const sizes = p.sizes || {};
+                const totalStock = Object.values(sizes).reduce((acc, val) => acc + (val.stock || 0), 0);
+                const isLowStock = totalStock <= 5;
+
+                return `
                     <div class="inv-item" style="${isLowStock ? 'border-left: 4px solid #ff4757; background: #fffafb;' : ''}">
                         <div class="inv-info">
                             <img src="${p.img || 'https://via.placeholder.com/50'}" class="inv-img">
@@ -584,86 +604,86 @@
                         <!-- Edit/Delete Removed for Owner -->
                     </div>
                 `;
-                }).join('');
-            }
+            }).join('');
+        }
 
-            // Edit Product (Populate Form)
-            // Product Management Functions Removed for Owner
+        // Edit Product (Populate Form)
+        // Product Management Functions Removed for Owner
 
-            // --- ORDERS LOGIC 2.0 ---
-            let lastOrderCount = 0; // Track order count for notifications
-            let isFirstLoad = true; // Don't notify on first load
+        // --- ORDERS LOGIC 2.0 ---
+        let lastOrderCount = 0; // Track order count for notifications
+        let isFirstLoad = true; // Don't notify on first load
 
-            async function fetchOrders() {
-                try {
-                    const res = await fetch('/api/orders');
-                    allOrders = await res.json();
+        async function fetchOrders() {
+            try {
+                const res = await fetch('/api/orders');
+                allOrders = await res.json();
 
-                    // Check for new orders
-                    if (!isFirstLoad && allOrders.length > lastOrderCount) {
-                        playNotificationSound();
-                        Toast.success(`🔔 ¡Nuevo pedido recibido! Total: ${allOrders.length}`);
-                    }
-
-                    lastOrderCount = allOrders.length;
-                    isFirstLoad = false;
-
-                    renderOrders(allOrders);
-                } catch (e) { Toast.error("Error cargando pedidos"); }
-            }
-
-            // Play notification sound
-            function playNotificationSound() {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-
-                // Beautiful bell-like sound
-                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-                oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1);
-
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 0.5);
-            }
-
-            // Auto-refresh orders every 30 seconds
-            setInterval(() => {
-                const currentView = document.querySelector('.view-section.active');
-                if (currentView && currentView.id === 'view-orders') {
-                    fetchOrders();
-                }
-            }, 5000); // 5 seconds
-
-            function renderOrders(orders) {
-                const tbody = document.getElementById('orders-list');
-                if (orders.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">No hay pedidos encontrados.</td></tr>';
-                    return;
+                // Check for new orders
+                if (!isFirstLoad && allOrders.length > lastOrderCount) {
+                    playNotificationSound();
+                    Toast.success(`🔔 ¡Nuevo pedido recibido! Total: ${allOrders.length}`);
                 }
 
-                const statusColors = {
-                    'pending': '#f1c40f', 'approved': '#2ecc71', 'shipped': '#3498db',
-                    'delivered': '#9b59b6', 'cancelled': '#e74c3c'
-                };
-                const statusLabels = {
-                    'pending': 'Pendiente', 'approved': 'Aprobado', 'shipped': 'Enviado',
-                    'delivered': 'Entregado', 'cancelled': 'Cancelado'
-                };
+                lastOrderCount = allOrders.length;
+                isFirstLoad = false;
 
-                const payStatusColors = { 'pending': '#fff3cd', 'verified': '#d4edda', 'rejected': '#f8d7da' };
-                const payStatusLabels = { 'pending': '🟡 Pendiente', 'verified': '🟢 Verificado', 'rejected': '🔴 Rechazado' };
+                renderOrders(allOrders);
+            } catch (e) { Toast.error("Error cargando pedidos"); }
+        }
 
-                tbody.innerHTML = orders.map(o => {
-                    const custName = typeof o.customer === 'object' ? o.customer.name : o.customer;
-                    const trackingDisplay = o.trackingCode ? `<span style="color:var(--primary); font-weight:800;">#${o.trackingCode}</span>` : `<small>#${o._id.slice(-6).toUpperCase()}</small>`;
+        // Play notification sound
+        function playNotificationSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
 
-                    return `
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            // Beautiful bell-like sound
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1);
+
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        }
+
+        // Auto-refresh orders every 30 seconds
+        setInterval(() => {
+            const currentView = document.querySelector('.view-section.active');
+            if (currentView && currentView.id === 'view-orders') {
+                fetchOrders();
+            }
+        }, 5000); // 5 seconds
+
+        function renderOrders(orders) {
+            const tbody = document.getElementById('orders-list');
+            if (orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">No hay pedidos encontrados.</td></tr>';
+                return;
+            }
+
+            const statusColors = {
+                'pending': '#f1c40f', 'approved': '#2ecc71', 'shipped': '#3498db',
+                'delivered': '#9b59b6', 'cancelled': '#e74c3c'
+            };
+            const statusLabels = {
+                'pending': 'Pendiente', 'approved': 'Aprobado', 'shipped': 'Enviado',
+                'delivered': 'Entregado', 'cancelled': 'Cancelado'
+            };
+
+            const payStatusColors = { 'pending': '#fff3cd', 'verified': '#d4edda', 'rejected': '#f8d7da' };
+            const payStatusLabels = { 'pending': '🟡 Pendiente', 'verified': '🟢 Verificado', 'rejected': '🔴 Rechazado' };
+
+            tbody.innerHTML = orders.map(o => {
+                const custName = typeof o.customer === 'object' ? o.customer.name : o.customer;
+                const trackingDisplay = o.trackingCode ? `<span style="color:var(--primary); font-weight:800;">#${o.trackingCode}</span>` : `<small>#${o._id.slice(-6).toUpperCase()}</small>`;
+
+                return `
                 <tr>
                     <td>
                         ${trackingDisplay}<br>
@@ -690,44 +710,44 @@
                     </td>
                 </tr>
             `}).join('');
-            }
+        }
 
-            function filterOrders() {
-                const term = document.getElementById('order-search').value.toLowerCase();
-                const status = document.getElementById('order-filter-status').value;
+        function filterOrders() {
+            const term = document.getElementById('order-search').value.toLowerCase();
+            const status = document.getElementById('order-filter-status').value;
 
-                const filtered = allOrders.filter(o => {
-                    const custName = typeof o.customer === 'object' ? o.customer.name : o.customer;
-                    const matchesTerm = custName.toLowerCase().includes(term) ||
-                        o.paymentRef.toLowerCase().includes(term) ||
-                        o._id.toLowerCase().includes(term);
-                    const matchesStatus = status === 'all' || o.status === status;
-                    return matchesTerm && matchesStatus;
-                });
-                renderOrders(filtered);
-            }
+            const filtered = allOrders.filter(o => {
+                const custName = typeof o.customer === 'object' ? o.customer.name : o.customer;
+                const matchesTerm = custName.toLowerCase().includes(term) ||
+                    o.paymentRef.toLowerCase().includes(term) ||
+                    o._id.toLowerCase().includes(term);
+                const matchesStatus = status === 'all' || o.status === status;
+                return matchesTerm && matchesStatus;
+            });
+            renderOrders(filtered);
+        }
 
-            let sortDesc = true;
-            function sortOrders(field) {
-                sortDesc = !sortDesc;
-                allOrders.sort((a, b) => {
-                    let valA = field === 'customer' ? (typeof a.customer === 'object' ? a.customer.name : a.customer) : a[field];
-                    let valB = field === 'customer' ? (typeof b.customer === 'object' ? b.customer.name : b.customer) : b[field];
+        let sortDesc = true;
+        function sortOrders(field) {
+            sortDesc = !sortDesc;
+            allOrders.sort((a, b) => {
+                let valA = field === 'customer' ? (typeof a.customer === 'object' ? a.customer.name : a.customer) : a[field];
+                let valB = field === 'customer' ? (typeof b.customer === 'object' ? b.customer.name : b.customer) : b[field];
 
-                    if (valA < valB) return sortDesc ? 1 : -1;
-                    if (valA > valB) return sortDesc ? -1 : 1;
-                    return 0;
-                });
-                renderOrders(allOrders);
-            }
+                if (valA < valB) return sortDesc ? 1 : -1;
+                if (valA > valB) return sortDesc ? -1 : 1;
+                return 0;
+            });
+            renderOrders(allOrders);
+        }
 
-            function openOrderModal(id) {
-                const order = allOrders.find(o => o._id === id);
-                if (!order) return;
+        function openOrderModal(id) {
+            const order = allOrders.find(o => o._id === id);
+            if (!order) return;
 
-                const cust = typeof order.customer === 'object' ? order.customer : { name: order.customer };
+            const cust = typeof order.customer === 'object' ? order.customer : { name: order.customer };
 
-                const html = `
+            const html = `
                 <div style="background:#f8f9fa; padding:10px; border-radius:8px; margin-bottom:15px; text-align:center;">
                     <span style="font-size:0.8rem; color:#666;">TRACKING ID</span><br>
                     <span style="font-size:1.5rem; font-weight:800; color:var(--primary); letter-spacing:2px;">${order.trackingCode || '—'}</span>
@@ -801,91 +821,91 @@
                 </div>
             `;
 
-                document.getElementById('order-modal-content').innerHTML = html;
-                document.getElementById('order-modal').style.display = 'flex';
+            document.getElementById('order-modal-content').innerHTML = html;
+            document.getElementById('order-modal').style.display = 'flex';
 
-                document.getElementById('save-order-btn').onclick = () => updateOrder(id);
-            }
+            document.getElementById('save-order-btn').onclick = () => updateOrder(id);
+        }
 
-            async function updateOrder(id) {
-                const status = document.getElementById('edit-order-status').value;
-                const paymentStatus = document.getElementById('edit-payment-status').value;
-                const tracking = document.getElementById('edit-order-tracking').value;
-                const notes = document.getElementById('edit-order-notes').value;
+        async function updateOrder(id) {
+            const status = document.getElementById('edit-order-status').value;
+            const paymentStatus = document.getElementById('edit-payment-status').value;
+            const tracking = document.getElementById('edit-order-tracking').value;
+            const notes = document.getElementById('edit-order-notes').value;
 
-                try {
-                    const res = await fetch(`/api/orders/${id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ status, paymentStatus, trackingCode: tracking, notes })
-                    });
+            try {
+                const res = await fetch(`/api/orders/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status, paymentStatus, trackingCode: tracking, notes })
+                });
 
-                    if (res.ok) {
-                        Toast.success("Pedido actualizado");
-                        document.getElementById('order-modal').style.display = 'none';
-                        fetchOrders();
-                    } else {
-                        Toast.error("Error al actualizar");
-                    }
-                } catch (e) { Toast.error("Error de conexión"); }
-            }
+                if (res.ok) {
+                    Toast.success("Pedido actualizado");
+                    document.getElementById('order-modal').style.display = 'none';
+                    fetchOrders();
+                } else {
+                    Toast.error("Error al actualizar");
+                }
+            } catch (e) { Toast.error("Error de conexión"); }
+        }
 
-            async function deleteOrder(id) {
-                if (!confirm("¿ESTÁS SEGURO? Esta acción no se puede deshacer.")) return;
-                try {
-                    const res = await fetch(`/api/orders/${id}`, { method: 'DELETE' });
-                    if (res.ok) {
-                        Toast.success("Pedido eliminado permanentemente");
-                        fetchOrders();
-                    } else Toast.error("Error al eliminar");
-                } catch (e) { Toast.error("Error de conexión"); }
-            }
+        async function deleteOrder(id) {
+            if (!confirm("¿ESTÁS SEGURO? Esta acción no se puede deshacer.")) return;
+            try {
+                const res = await fetch(`/api/orders/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    Toast.success("Pedido eliminado permanentemente");
+                    fetchOrders();
+                } else Toast.error("Error al eliminar");
+            } catch (e) { Toast.error("Error de conexión"); }
+        }
 
-            // --- CMS LOGIC ---
-            async function fetchCMS() {
-                try {
-                    const res = await fetch('/api/content');
-                    const content = await res.json();
+        // --- CMS LOGIC ---
+        async function fetchCMS() {
+            try {
+                const res = await fetch('/api/content');
+                const content = await res.json();
 
-                    if (content.themeColor) document.getElementById('cms-color').value = content.themeColor;
-                    if (content.infoBar) document.getElementById('cms-infobar').value = content.infoBar;
-                    if (content.heroTitle) document.getElementById('cms-hero-title').value = content.heroTitle;
-                    if (content.heroSubtitle) document.getElementById('cms-hero-sub').value = content.heroSubtitle;
-                    if (content.whatsapp) document.getElementById('cms-wa').value = content.whatsapp;
-                    if (content.instagram) document.getElementById('cms-ig').value = content.instagram;
-                    if (content.tiktok) document.getElementById('cms-tt').value = content.tiktok;
-                } catch (e) { console.error(e); }
-            }
+                if (content.themeColor) document.getElementById('cms-color').value = content.themeColor;
+                if (content.infoBar) document.getElementById('cms-infobar').value = content.infoBar;
+                if (content.heroTitle) document.getElementById('cms-hero-title').value = content.heroTitle;
+                if (content.heroSubtitle) document.getElementById('cms-hero-sub').value = content.heroSubtitle;
+                if (content.whatsapp) document.getElementById('cms-wa').value = content.whatsapp;
+                if (content.instagram) document.getElementById('cms-ig').value = content.instagram;
+                if (content.tiktok) document.getElementById('cms-tt').value = content.tiktok;
+            } catch (e) { console.error(e); }
+        }
 
-            document.getElementById('cms-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const data = Object.fromEntries(new FormData(e.target));
+        document.getElementById('cms-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = Object.fromEntries(new FormData(e.target));
 
-                try {
-                    const res = await fetch('/api/content', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data)
-                    });
-                    if (res.ok) Toast.success("¡Tienda actualizada! Recarga para ver cambios.");
-                    else Toast.error("Error guardando cambios");
-                } catch (e) { Toast.error("Error de conexión"); }
-            });
+            try {
+                const res = await fetch('/api/content', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) Toast.success("¡Tienda actualizada! Recarga para ver cambios.");
+                else Toast.error("Error guardando cambios");
+            } catch (e) { Toast.error("Error de conexión"); }
+        });
 
-            // --- UPLOAD DRAG & DROP ---
-            // Drag & Drop Removed for Owner
+        // --- UPLOAD DRAG & DROP ---
+        // Drag & Drop Removed for Owner
 
-            // Initialize Admin Panel
-            window.addEventListener('load', () => {
-                console.log("Admin Panel Init as:", adminRole);
-                checkRoleAccess();
-                fetchStats();
-                fetchProducts();
-                fetchOrders();
-                fetchCMS();
-            });
+        // Initialize Admin Panel
+        window.addEventListener('load', () => {
+            console.log("Admin Panel Init as:", adminRole);
+            checkRoleAccess();
+            fetchStats();
+            fetchProducts();
+            fetchOrders();
+            fetchCMS();
+        });
 
-        </script>
+    </script>
 </body>
 
 </html>
