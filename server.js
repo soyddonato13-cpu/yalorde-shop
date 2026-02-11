@@ -77,24 +77,42 @@ const MONGO_URI = "mongodb://isaronstudio_db_user:9qAPPeUHUCA5VVei@ac-wdjjzbn-sh
 
 
 
-let isConnected = false;
+let cachedDb = null;
 
 const connectDB = async () => {
-    if (isConnected) return;
+    if (cachedDb && mongoose.connection.readyState === 1) {
+        console.log('✅ Using cached MongoDB connection');
+        return cachedDb;
+    }
+
     try {
-        await mongoose.connect(MONGO_URI, {
-            family: 4 // Force IPv4
+        console.log('⏳ Connecting to MongoDB...');
+        // Fix for serverless: prevent buffering on cold starts if connection fails
+        mongoose.set('strictQuery', false);
+
+        const conn = await mongoose.connect(MONGO_URI, {
+            family: 4, // Force IPv4
+            serverSelectionTimeoutMS: 5000, // Fail fast if no connection (default 30s)
+            socketTimeoutMS: 45000, // Close sockets after 45s
         });
+
+        cachedDb = conn;
         isConnected = true;
-        console.log('✅ Connected to MongoDB Atlas');
+        console.log('✅ New MongoDB connection established');
         await seedDatabase();
+        return conn;
     } catch (err) {
         console.error('❌ MongoDB Connection Error:', err);
+        // Do not throw here to allow retry logic or gracefull degradation if needed, 
+        // but for now let's just log. In serverless, maybe throwing is better to restart pod.
+        throw err;
     }
 };
 
-// Connect immediately on load (mostly for local, Lambda might reuse context)
-connectDB();
+// Connect immediately not strictly necessary for serverless but harmless
+// connectDB(); // Commented out to let each request handle its connection via middleware/injection if needed, 
+// but since this is top-level, it runs on cold start. kept below.
+connectDB().catch(err => console.error("Init connection failed", err));
 
 // Seeding Logic
 async function seedDatabase() {
