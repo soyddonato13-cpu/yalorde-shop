@@ -481,12 +481,40 @@ app.get('/api/admin/stats', requireAuth, async (req, res) => {
             { $limit: 5 }
         ]);
 
+        // Payment Method Stats
+        const paymentStats = await Order.aggregate([
+            { $match: { status: { $ne: 'cancelled' } } },
+            { $group: { _id: "$paymentMethod", count: { $sum: 1 } } }
+        ]);
+
+        // Top Customers
+        const topCustomers = await Order.aggregate([
+            { $match: { status: { $in: ['approved', 'shipped', 'delivered'] } } },
+            {
+                $group: {
+                    _id: "$customer.email",
+                    name: { $first: "$customer.name" },
+                    totalSpent: { $sum: "$total" },
+                    ordersCount: { $sum: 1 }
+                }
+            },
+            { $sort: { totalSpent: -1 } },
+            { $limit: 5 }
+        ]);
+
+        const totalRevenueVal = totalSales[0]?.total || 0;
+        const totalOrdersCount = ordersByStatus.reduce((acc, curr) => acc + curr.count, 0);
+
         res.json({
-            totalRevenue: totalSales[0]?.total || 0,
+            totalRevenue: totalRevenueVal,
+            totalOrders: totalOrdersCount,
+            averageOrderValue: totalOrdersCount > 0 ? (totalRevenueVal / totalOrdersCount) : 0,
             statusDistribution: ordersByStatus,
             lowStockCount,
             weeklySales,
-            topProducts
+            topProducts,
+            paymentStats,
+            topCustomers
         });
     } catch (err) {
         console.error(err);
